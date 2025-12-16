@@ -24,7 +24,9 @@ app.use(express.json()); // Parse JSON bodies (as sent by API clients)
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // --- Routes ---
-
+app.get("/",(req:Request, res:Response) => {
+  res.send("<h1>Welcome to the Matrimony API </h1>");
+} )
 // Health Check (Used by Load Balancers/AWS/Render)
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "UP", timestamp: new Date() });
