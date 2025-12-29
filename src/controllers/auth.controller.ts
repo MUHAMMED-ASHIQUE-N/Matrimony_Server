@@ -1,72 +1,86 @@
 import { Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcrypt'; // or argon2
+import { AuthService } from '../services/auth.service';
 import jwt from 'jsonwebtoken';
-import db from '../config/db'; // Your pg pool
 
 export class AuthController {
-  
+
+  // ... (Keep your existing signup method) ...
   static async signup(req: Request, res: Response, next: NextFunction) {
+    // ... (Your existing code) ...
     try {
-      const { email, password } = req.body;
-
-      // 1. Check if user exists
-      const userCheck = await db.query('SELECT user_id FROM users WHERE email = $1', [email]);
-      if (userCheck.rows.length > 0) {
-        return res.status(409).json({ message: 'Email already exists' });
+      const { identifier, type, password } = req.body;
+      if (!['EMAIL', 'PHONE'].includes(type)) {
+        return res.status(400).json({ message: 'Invalid type. Must be EMAIL or PHONE' });
       }
-
-      // 2. Hash Password
-      const salt = await bcrypt.genSalt(10);
-      const hash = await bcrypt.hash(password, salt);
-
-      // 3. Insert User
-      const newUser = await db.query(
-        'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING user_id, email',
-        [email, hash]
-      );
-
-      // 4. Generate Token immediately so they are logged in
-      const token = jwt.sign(
-        { userId: newUser.rows[0].user_id }, 
-        process.env.JWT_SECRET as string, 
-        { expiresIn: '7d' }
-      );
-
-      res.status(201).json({
-        message: 'User registered successfully',
-        token,
-        user: newUser.rows[0]
+      const result = await AuthService.register(identifier, type, password);
+      res.status(200).json({
+        message: result.isNew 
+          ? `Registration successful. OTP sent to ${type.toLowerCase()}.` 
+          : `Account pending verification. New OTP sent to ${type.toLowerCase()}.`,
+        userId: result.userId,
+        devHint: process.env.NODE_ENV === 'development' ? 'Check server console for OTP' : undefined
       });
-
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'USER_ALREADY_EXISTS') {
+        return res.status(409).json({ message: 'User already registered. Please login.' });
+      }
       next(error);
     }
   }
 
+  // ... (Keep your existing verify method) ...
+  static async verify(req: Request, res: Response, next: NextFunction) {
+    // ... (Your existing code) ...
+    try {
+      const { identifier, type, otp } = req.body;
+      if (!['EMAIL', 'PHONE'].includes(type)) {
+        return res.status(400).json({ message: 'Invalid type. Must be EMAIL or PHONE' });
+      }
+      const user = await AuthService.verifyOtp(identifier, type, otp);
+      const token = jwt.sign(
+        { userId: user.user_id },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '7d' }
+      );
+      res.status(200).json({
+        message: 'Verified successfully. Logged in.',
+        token,
+        userId: user.user_id
+      });
+    } catch (error: any) {
+      if (error.message === 'INVALID_OTP') return res.status(400).json({ message: 'Invalid or expired OTP' });
+      if (error.message === 'USER_NOT_FOUND') return res.status(404).json({ message: 'User not found' });
+      next(error);
+    }
+  }
+
+  // FIX 4: ADD THE MISSING LOGIN METHOD
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { identifier, password, type } = req.body; // Expect type (EMAIL/PHONE) for clarity
 
-      // 1. Find User
-      const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-      const user = result.rows[0];
+      // You need to ensure AuthService has a login method
+      const user = await AuthService.login(identifier, password, type);
 
-      if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-
-      // 2. Compare Password
-      const validPass = await bcrypt.compare(password, user.password_hash);
-      if (!validPass) return res.status(401).json({ message: 'Invalid credentials' });
-
-      // 3. Generate Token
       const token = jwt.sign(
-        { userId: user.user_id }, 
-        process.env.JWT_SECRET as string, 
+        { userId: user.user_id },
+        process.env.JWT_SECRET as string,
         { expiresIn: '7d' }
       );
 
-      res.json({ token, userId: user.user_id });
+      res.status(200).json({
+        message: 'Login successful',
+        token,
+        userId: user.user_id
+      });
 
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message === 'INVALID_CREDENTIALS') {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+      if (error.message === 'USER_NOT_VERIFIED') {
+        return res.status(403).json({ message: 'Account not verified. Please verify OTP.' });
+      }
       next(error);
     }
   }
