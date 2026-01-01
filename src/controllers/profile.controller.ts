@@ -92,7 +92,75 @@ export class ProfileController {
       next(error);
     }
   }
+static async registerFullProfile(req: Request, res: Response, next: NextFunction) {
+    const userId = (req as any).user.userId;
+    const data = req.body;
 
+    try {
+      // 1. Parse Ranges (Frontend sends [25, 30], DB needs min_age, max_age)
+      const [pMinAge, pMaxAge] = data.ageRange || [18, 60];
+      const [pMinHeight, pMaxHeight] = data.heightRange || [140, 200];
+
+      // 2. Prepare SQL (Upsert: Update if exists, Insert if not)
+      const query = `
+        INSERT INTO profiles (
+          user_id, first_name, last_name, contact, gender, profile_created_for,
+          date_of_birth, height_cm, weight_kg, caste, marital_status,
+          education, present_country, financial_status,
+          photos, hobbies, interests,
+          diet_preference, smoking, drinking,
+          partner_min_age, partner_max_age,
+          partner_min_height, partner_max_height,
+          partner_marital_preference, partner_religion_preference,
+          updated_at
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, 
+          $7, $8, $9, $10, $11, 
+          $12, $13, $14, 
+          $15, $16, $17, 
+          $18, $19, $20, 
+          $21, $22, $23, $24, $25, $26,
+          NOW()
+        )
+        ON CONFLICT (user_id) 
+        DO UPDATE SET 
+          first_name = EXCLUDED.first_name,
+          last_name = EXCLUDED.last_name,
+          contact = EXCLUDED.contact,
+          photos = EXCLUDED.photos,
+          education = EXCLUDED.education,
+          present_country = EXCLUDED.present_country,
+          financial_status = EXCLUDED.financial_status,
+          partner_min_age = EXCLUDED.partner_min_age,
+          partner_max_age = EXCLUDED.partner_max_age,
+          updated_at = NOW()
+        RETURNING *;
+      `;
+
+      const values = [
+        userId, 
+        data.firstName, data.lastName, data.contact, data.gender, data.profileCreatedFor,
+        data.dateOfBirth, parseFloat(data.height), parseFloat(data.weight), data.caste, data.maritalStatus,
+        data.education, data.presentCountry, data.financialStatus,
+        data.photos || [], data.hobbies || [], data.interests || [],
+        data.dietPreference, data.smoking, data.drinking,
+        pMinAge, pMaxAge,
+        pMinHeight, pMaxHeight,
+        data.maritalStatusPreference, data.religionPreference
+      ];
+
+      const result = await db.query(query, values);
+
+      res.status(200).json({
+        message: 'Full profile registered successfully',
+        profile: result.rows[0]
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
   /**
    * 3. Update Full Profile (Step 5: Full Registration)
    * Uses dynamic update to fill in the rest of the details.
