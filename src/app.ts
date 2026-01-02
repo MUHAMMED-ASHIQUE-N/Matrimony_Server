@@ -12,21 +12,16 @@ const app: Application = express();
 app.use(helmet());
 
 // 2. CORS (Allow requests from your Frontend/Mobile App)
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "*", // Restrict this in production!
-    credentials: true,
-  })
-);
+app.use(cors());
 
 // 3. Body Parsers
 app.use(express.json()); // Parse JSON bodies (as sent by API clients)
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // --- Routes ---
-app.get("/",(req:Request, res:Response) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("<h1>Welcome to the Matrimony API </h1>");
-} )
+})
 // Health Check (Used by Load Balancers/AWS/Render)
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "UP", timestamp: new Date() });
