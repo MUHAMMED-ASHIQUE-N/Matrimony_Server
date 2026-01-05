@@ -1,17 +1,21 @@
 import { z } from 'zod';
 
+// Reuseable Enums (Good for consistency)
+const genderEnum = z.enum(['Male', 'Female', 'Other']);
+const profileForEnum = z.enum(['Self', 'Son', 'Daughter', 'Sibling', 'Friend']);
+
 export const fullProfileSchema = z.object({
   body: z.object({
     // Basic
     firstName: z.string().min(2),
     lastName: z.string().optional(),
     contact: z.string().min(10),
-    profileCreatedFor: z.enum(['Self', 'Son', 'Daughter', 'Sibling', 'Friend']),
-    gender: z.enum(['Male', 'Female', 'Other']),
+    profileCreatedFor: profileForEnum,
+    gender: genderEnum,
     
     // Personal
     dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid Date" }),
-    height: z.string(), // "5.5 ft" -> needs parsing or send as cm
+    height: z.string(), // Frontend sends "175", stored as numeric
     weight: z.string(),
     caste: z.string().optional(),
     maritalStatus: z.string(),
@@ -22,7 +26,7 @@ export const fullProfileSchema = z.object({
     financialStatus: z.string(),
     
     // Arrays
-    photos: z.array(z.string().url()).optional(), // Array of URLs
+    photos: z.array(z.string().url()).optional(),
     hobbies: z.array(z.string()).optional(),
     interests: z.array(z.string()).optional(),
     
@@ -31,11 +35,15 @@ export const fullProfileSchema = z.object({
     smoking: z.string().optional(),
     drinking: z.string().optional(),
     
-    // Partner Preferences (Ranges come as Arrays [min, max])
-    ageRange: z.tuple([z.number(), z.number()]), 
-    heightRange: z.tuple([z.number(), z.number()]), 
+    // Partner Preferences (Frontend sends Arrays [min, max])
+    ageRange: z.tuple([z.number(), z.number()]).optional(), 
+    heightRange: z.tuple([z.number(), z.number()]).optional(), 
     maritalStatusPreference: z.string().optional(),
     religionPreference: z.string().optional(),
-    distance: z.string().optional() // stored as number in DB
+    distance: z.string().optional()
   }),
 });
+
+// Update Schema: Everything is optional
+// We use deepPartial to allow sending just { "firstName": "NewName" }
+export const updateProfileSchema = fullProfileSchema.deepPartial();

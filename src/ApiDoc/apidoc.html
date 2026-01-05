@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrimony API Workbench</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* Transitions */
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Method Badges */
+        .method-get { background-color: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+        .method-post { background-color: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+        .method-patch { background-color: #F5F3FF; color: #6D28D9; border: 1px solid #DDD6FE; }
+        .method-delete { background-color: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+
+        /* Step States */
+        .step-active { border-left: 4px solid #EC4899; background-color: #FFF1F2; } /* Pink/Rose for Romance theme */
+        .step-inactive { border-left: 4px solid transparent; }
+        .step-inactive:hover { background-color: #F1F5F9; }
+
+        /* Relationship Connector Lines */
+        .tree-line {
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            bottom: -24px;
+            width: 2px;
+            background-color: #E2E8F0;
+        }
+        .tree-item:last-child .tree-line { display: none; }
+    </style>
+    <!-- Chosen Palette: Modern Tech-Romance (Slate backgrounds, Pink/Rose primary accents for Matrimony context) -->
+</head>
+<body class="min-h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 z-30">
+        <div class="max-w-[1600px] mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-pink-600 rounded-lg flex items-center justify-center text-white text-lg">💍</div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-slate-900 leading-tight">MatrimonySys <span class="text-slate-400 font-normal">API v2</span></h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 text-xs font-mono text-slate-500">
+                <span class="bg-slate-100 px-2 py-1 rounded border border-slate-200">ENV: Production</span>
+                <span class="bg-slate-100 px-2 py-1 rounded border border-slate-200">AUTH: Bearer JWT</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-[1600px] mx-auto w-full px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden h-[calc(100vh-64px)]">
+        
+        <!-- LEFT SIDEBAR: Workflow Navigation -->
+        <div class="lg:col-span-3 flex flex-col h-full overflow-hidden bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div class="p-4 border-b border-slate-100 bg-slate-50">
+                <h3 class="font-semibold text-slate-800 text-sm uppercase tracking-wide">User Journey</h3>
+                <p class="text-xs text-slate-500 mt-1">Step-by-step onboarding & matching flow.</p>
+            </div>
+            
+            <nav class="flex-1 overflow-y-auto p-2 space-y-1" id="workflow-nav">
+                <!-- Javascript will populate this -->
+            </nav>
+
+            <div class="p-4 border-t border-slate-100 bg-slate-50">
+                <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Utilities</h4>
+                <div id="utility-nav" class="grid grid-cols-2 gap-2">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER PANEL: Interaction Stage -->
+        <div class="lg:col-span-6 flex flex-col h-full space-y-4 overflow-hidden">
+            
+            <!-- Context Banner -->
+            <div id="content-header" class="flex-shrink-0 fade-in px-1">
+                <!-- JS Populated -->
+            </div>
+
+            <!-- Request Card (Scrollable Body) -->
+            <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col fade-in">
+                <!-- Card Header -->
+                <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
+                    <div class="flex items-center gap-3">
+                        <span id="req-method-badge" class="px-2 py-1 rounded text-xs font-bold uppercase font-mono">METHOD</span>
+                        <span class="text-xs text-slate-400 font-mono">/api/v1</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span id="auth-badge" class="hidden px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-700 border border-amber-200 font-bold">🔒 AUTH REQ</span>
+                        <span id="form-data-badge" class="hidden px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-700 border border-purple-200 font-bold">📁 MULTIPART</span>
+                    </div>
+                </div>
+
+                <!-- Card Content (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                    
+                    <!-- Endpoint Display -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Endpoint URL</label>
+                        <div class="flex items-center bg-slate-100 rounded border border-slate-200 p-2.5 font-mono text-sm text-slate-700 break-all group relative">
+                            <span class="text-slate-400 select-none">/api</span>
+                            <span id="req-endpoint" class="text-pink-700 font-medium ml-0.5">/resource</span>
+                        </div>
+                    </div>
+
+                    <!-- Parameter Visualization Table -->
+                    <div id="params-section" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex justify-between">
+                            <span>Query Parameters (Filters)</span>
+                            <span class="text-[10px] normal-case font-normal text-slate-400">Used for Searching</span>
+                        </label>
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-slate-100">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Key</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Value</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Desc</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-100" id="params-table-body">
+                                    <!-- JS Populated -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- JSON Body Visualization -->
+                    <div id="body-section" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Request Body (JSON)</label>
+                        <div class="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner group">
+                            <pre id="req-body-display" class="text-xs text-blue-300 font-mono overflow-x-auto whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+
+                    <!-- Form Data Visualization -->
+                    <div id="form-data-section" class="hidden">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Request Body (Form Data)</label>
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-slate-100">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase w-1/3">Key</th>
+                                        <th class="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase w-2/3">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-100" id="form-data-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-2 italic">* Complex objects like "ageRange" must be sent as Stringified JSON in form-data.</p>
+                    </div>
+
+                </div>
+
+                <!-- Action Footer -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-shrink-0">
+                    <span class="text-xs text-slate-400 italic" id="req-desc-footer">Simulates API call...</span>
+                    <button id="simulate-btn" class="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2">
+                        <span>🚀</span> Simulate Request
+                    </button>
+                </div>
+            </div>
+
+            <!-- Response Console (Fixed Height) -->
+            <div id="response-console" class="h-48 bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden fade-in flex flex-col hidden flex-shrink-0">
+                <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
+                    <span class="text-xs text-emerald-400 font-mono font-bold">HTTP 200 OK</span>
+                    <span class="text-[10px] text-slate-500 font-mono">42ms</span>
+                </div>
+                <div class="p-4 overflow-y-auto flex-1 custom-scroll">
+                    <pre class="text-xs text-emerald-300 font-mono" id="res-body">// Response will appear here</pre>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: Visual Context -->
+        <div class="lg:col-span-3 flex flex-col h-full space-y-6 overflow-hidden">
+            
+            <!-- Entity Relationship Diagram (CSS) -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
+                <h3 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
+                    <span>🗄️</span> Database Context
+                </h3>
+                <div class="relative pl-2">
+                    <!-- User Node -->
+                    <div class="relative pl-6 pb-6 tree-item">
+                        <div class="tree-line"></div>
+                        <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center z-10">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                        </div>
+                        <div class="bg-indigo-50 border border-indigo-100 rounded p-2">
+                            <h4 class="text-xs font-bold text-indigo-900">Users Table</h4>
+                            <p class="text-[10px] text-indigo-700 mt-0.5">Auth, Email, Phone, PasswordHash</p>
+                        </div>
+                    </div>
+
+                    <!-- Profile Node -->
+                    <div class="relative pl-6 pb-6 tree-item">
+                        <div class="tree-line"></div>
+                        <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-pink-500 rounded-full flex items-center justify-center z-10">
+                            <div class="w-2 h-2 bg-pink-500 rounded-full"></div>
+                        </div>
+                        <div class="bg-pink-50 border border-pink-100 rounded p-2">
+                            <h4 class="text-xs font-bold text-pink-900">Profiles Table</h4>
+                            <p class="text-[10px] text-pink-700 mt-0.5">Details, Gender, Bio, Physical Stats</p>
+                        </div>
+                    </div>
+
+                    <!-- Media Node -->
+                    <div class="relative pl-6 pb-6 tree-item">
+                        <div class="tree-line"></div>
+                        <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-purple-500 rounded-full flex items-center justify-center z-10">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-100 rounded p-2">
+                            <h4 class="text-xs font-bold text-purple-900">Media Columns</h4>
+                            <p class="text-[10px] text-purple-700 mt-0.5">user_profile (String), photos (Array)</p>
+                        </div>
+                    </div>
+
+                    <!-- Preferences Node -->
+                    <div class="relative pl-6 tree-item">
+                        <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-emerald-500 rounded-full flex items-center justify-center z-10">
+                            <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-100 rounded p-2">
+                            <h4 class="text-xs font-bold text-emerald-900">Preferences Cols</h4>
+                            <p class="text-[10px] text-emerald-700 mt-0.5">partner_min_age, location_pref</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Insight Box -->
+            <div class="bg-slate-800 text-white p-5 rounded-xl shadow-md border border-slate-700 flex-1 overflow-y-auto">
+                <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">Logic Insight</h4>
+                <p id="logic-insight" class="text-sm leading-relaxed text-slate-200">
+                    Select a workflow step to see how the backend logic processes the request.
+                </p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // --- API WORKFLOW DATA ---
+        // Contains the Matrimony logic mapped to the UI structure
+        
+        const workflowSteps = [
+            {
+                id: 'step1',
+                title: '1. User Signup',
+                desc: 'Register via Email/Phone. Generates OTP. System creates a User record with verified=false.',
+                method: 'POST',
+                endpoint: '/auth/signup',
+                authReq: false,
+                isFormData: false,
+                body: { "identifier": "ashique@example.com", "type": "EMAIL", "password": "pass", "confirmPassword": "pass" },
+                params: null,
+                insight: "The AuthService hashes the password using bcrypt and generates a 6-digit random OTP. NotificationService sends the email asynchronously.",
+                response: { "message": "Registration successful. OTP sent.", "userId": "uuid-1234", "isNew": true }
+            },
+            {
+                id: 'step2',
+                title: '2. Verify OTP',
+                desc: 'Verify the code sent to email. Returns JWT Token on success.',
+                method: 'POST',
+                endpoint: '/auth/verify-otp',
+                authReq: false,
+                isFormData: false,
+                body: { "identifier": "ashique@example.com", "type": "EMAIL", "otp": "123456" },
+                params: null,
+                insight: "Upon verification, the `is_verified` flag in the Users table is set to TRUE. A JWT token signed with user_id is returned for future requests.",
+                response: { "message": "Verified successfully", "token": "eyJhbGciOiJIUz...", "userId": "uuid-1234" }
+            },
+            {
+                id: 'step3',
+                title: '3. Create Basic Profile',
+                desc: 'Onboarding popup. Captures essential Gender info needed for initial matchmaking.',
+                method: 'POST',
+                endpoint: '/profile/basic',
+                authReq: true,
+                isFormData: false,
+                body: { "firstName": "Ashique", "gender": "Male", "profileCreatedFor": "Self" },
+                params: null,
+                insight: "Creates a row in Profiles table linked to User. Gender is crucial here as it determines the default 'Looking For' logic (Male -> Female).",
+                response: { "message": "Basic profile created", "profile": { "id": "p-1", "gender": "Male" } }
+            },
+            {
+                id: 'step4',
+                title: '4. Initial Matchmaking',
+                desc: 'Get matches immediately after basic profile. Uses defaults (Age 18-60).',
+                method: 'GET',
+                endpoint: '/profile/matches',
+                authReq: true,
+                isFormData: false,
+                body: null,
+                params: null,
+                insight: "Controller detects Gender='Male'. Since no specific preferences are saved yet, it defaults to querying ALL 'Females' aged 18-60.",
+                response: { 
+                    "criteria": { "lookingFor": "Female", "ageRange": [18, 60] },
+                    "matches": [{ "name": "Priya", "age": 24 }, { "name": "Anjali", "age": 28 }] 
+                }
+            },
+            {
+                id: 'step5',
+                title: '5. Full Registration',
+                desc: 'Detailed form with Photos and Partner Preferences. **Must be Form Data**.',
+                method: 'POST',
+                endpoint: '/profile/register',
+                authReq: true,
+                isFormData: true,
+                body: { 
+                    "firstName": "Ashique",
+                    "lastName": "Dev",
+                    "contact": "+919876543210",
+                    "gender": "Male",
+                    "profileCreatedFor": "Self",
+                    "dateOfBirth": "1998-05-20",
+                    "height": "175",
+                    "weight": "70",
+                    "caste": "Muslim - Sunni",
+                    "maritalStatus": "Single",
+                    "education": "B.Tech Computer Science",
+                    "presentCountry": "India",
+                    "financialStatus": "Middle Class",
+                    "dietPreference": "Non-Veg",
+                    "smoking": "No",
+                    "drinking": "No",
+                    "ageRange": "[20, 28]",
+                    "heightRange": "[150, 170]",
+                    "maritalStatusPreference": "Single",
+                    "religionPreference": "Muslim",
+                    "hobbies": "Coding",
+                    "interests": "Technology",
+                    "user_profile": "(File Object)",
+                    "photos": "(Multiple File Objects)"
+                },
+                params: null,
+                insight: "Uses Multer to upload images to Cloudinary. Saves URLs to `user_profile` and `photos` columns. Stringified JSON fields like `ageRange` are parsed manually in the Controller.",
+                response: { "message": "Full profile registered", "profile": { "partner_min_age": 20, "partner_max_age": 28, "photos": ["url1", "url2"] } }
+            },
+            {
+                id: 'step6',
+                title: '6. Smart Matching',
+                desc: 'Get matches again. Now uses the saved preferences (Age 22-28).',
+                method: 'GET',
+                endpoint: '/profile/matches',
+                authReq: true,
+                isFormData: false,
+                body: null,
+                params: null,
+                insight: "Controller sees the user now has preferences saved (min_age=22). It applies these filters automatically instead of the defaults.",
+                response: { 
+                    "criteria": { "lookingFor": "Female", "ageRange": [22, 28] },
+                    "matches": [{ "name": "Sarah", "age": 25, "location": "Kerala" }] 
+                }
+            },
+            {
+                id: 'step7',
+                title: '7. Advanced Search & Filter',
+                desc: 'Override preferences with specific search criteria (Job, Location, Age).',
+                method: 'GET',
+                endpoint: '/profile/matches',
+                authReq: true,
+                isFormData: false,
+                body: null,
+                params: {
+                    "search": { val: "Dr.", desc: "Filter by Name/Title" },
+                    "job": { val: "Doctor", desc: "Filter by Education/Job" },
+                    "location": { val: "Dubai", desc: "Filter by Country" },
+                    "ageMin": { val: "25", desc: "Override Min Age" },
+                    "ageMax": { val: "35", desc: "Override Max Age" }
+                },
+                insight: "Query parameters take priority over database preferences. The SQL query dynamically appends `AND job LIKE '%Doctor%'` and `AND country = 'Dubai'`.",
+                response: { 
+                    "criteria": { 
+                        "lookingFor": "Female", 
+                        "filters": { "job": "Doctor", "location": "Dubai" } 
+                    },
+                    "matches": [{ "name": "Dr. Amina", "age": 29, "job": "MBBS Doctor", "country": "Dubai" }] 
+                }
+            }
+        ];
+
+        const utilities = [
+            { id: 'u1', label: 'Upload Media', method: 'POST', endpoint: '/profile/media', authReq: true, isFormData: true, body: { type: 'form-data', user_profile: '(File)', photos: '(Files)' } },
+            { id: 'u2', label: 'Delete Media', method: 'DELETE', endpoint: '/profile/media', authReq: true, isFormData: false, body: { type: 'photos', url: 'img_url...' } },
+            { id: 'u3', label: 'Get My Profile', method: 'GET', endpoint: '/profile/me', authReq: true, isFormData: false, body: null },
+            { id: 'u4', label: 'Update Profile', method: 'PATCH', endpoint: '/profile/me', authReq: true, isFormData: true, body: { height: 180, photos: '(File)' } }
+        ];
+
+        // --- STATE & DOM ---
+        let currentStepId = 'step1';
+        const navContainer = document.getElementById('workflow-nav');
+        const utilContainer = document.getElementById('utility-nav');
+        const headerContainer = document.getElementById('content-header');
+        
+        // Element Refs
+        const els = {
+            methodBadge: document.getElementById('req-method-badge'),
+            endpoint: document.getElementById('req-endpoint'),
+            authBadge: document.getElementById('auth-badge'),
+            formDataBadge: document.getElementById('form-data-badge'),
+            paramsSection: document.getElementById('params-section'),
+            paramsBody: document.getElementById('params-table-body'),
+            bodySection: document.getElementById('body-section'),
+            bodyDisplay: document.getElementById('req-body-display'),
+            formDataSection: document.getElementById('form-data-section'),
+            formDataBody: document.getElementById('form-data-body'),
+            simulateBtn: document.getElementById('simulate-btn'),
+            console: document.getElementById('response-console'),
+            resBody: document.getElementById('res-body'),
+            insight: document.getElementById('logic-insight')
+        };
+
+        // --- INIT ---
+        function init() {
+            renderNav();
+            renderUtils();
+            loadStep(workflowSteps[0]);
+        }
+
+        // --- RENDERING ---
+        function renderNav() {
+            navContainer.innerHTML = '';
+            workflowSteps.forEach(step => {
+                const btn = document.createElement('button');
+                const isActive = step.id === currentStepId;
+                btn.className = `w-full text-left px-4 py-3 text-sm font-medium transition-all duration-200 flex items-center justify-between group ${isActive ? 'step-active text-pink-700 bg-pink-50' : 'step-inactive text-slate-600'}`;
+                
+                btn.innerHTML = `
+                    <span class="truncate pr-2">${step.title}</span>
+                    <span class="text-[10px] font-mono opacity-0 group-hover:opacity-100 ${isActive ? 'opacity-100' : ''} ${getMethodColor(step.method, true)} px-1.5 py-0.5 rounded">${step.method}</span>
+                `;
+                
+                btn.onclick = () => {
+                    currentStepId = step.id;
+                    renderNav();
+                    loadStep(step);
+                };
+                navContainer.appendChild(btn);
+            });
+        }
+
+        function renderUtils() {
+            utilContainer.innerHTML = '';
+            utilities.forEach(util => {
+                const btn = document.createElement('button');
+                btn.className = 'text-[10px] bg-white border border-slate-200 hover:border-pink-300 hover:text-pink-600 text-slate-500 py-2 rounded transition-colors shadow-sm';
+                btn.innerText = util.label;
+                btn.onclick = () => {
+                    // Quick load utility logic
+                    loadStep({
+                        title: `Utility: ${util.label}`,
+                        desc: "Helper endpoint for profile management.",
+                        method: util.method,
+                        endpoint: util.endpoint,
+                        authReq: util.authReq,
+                        isFormData: util.isFormData,
+                        body: util.body,
+                        params: null,
+                        insight: "Direct database manipulation via specific utility controller methods.",
+                        response: { success: true }
+                    });
+                    // Reset nav highlight
+                    currentStepId = null;
+                    renderNav();
+                };
+                utilContainer.appendChild(btn);
+            });
+        }
+
+        // --- LOGIC ---
+        function loadStep(step) {
+            // Header
+            headerContainer.innerHTML = `
+                <h2 class="text-xl font-bold text-slate-900">${step.title}</h2>
+                <p class="text-sm text-slate-500 mt-1">${step.desc}</p>
+            `;
+
+            // Method & URL
+            els.methodBadge.innerText = step.method;
+            els.methodBadge.className = `px-2 py-1 rounded text-xs font-bold uppercase font-mono ${getMethodColor(step.method)}`;
+            els.endpoint.innerText = step.endpoint;
+            
+            // Badges
+            els.authBadge.style.display = step.authReq ? 'inline-block' : 'none';
+            els.formDataBadge.style.display = step.isFormData ? 'inline-block' : 'none';
+
+            // Query Params (The Filter Logic)
+            if (step.params) {
+                els.paramsSection.classList.remove('hidden');
+                els.paramsBody.innerHTML = '';
+                let queryString = [];
+                for (const [key, obj] of Object.entries(step.params)) {
+                    queryString.push(`${key}=${obj.val}`);
+                    const row = `
+                        <tr>
+                            <td class="px-3 py-2 font-mono text-xs text-pink-600 font-bold">${key}</td>
+                            <td class="px-3 py-2 font-mono text-xs text-slate-600">${obj.val}</td>
+                            <td class="px-3 py-2 text-xs text-slate-400 italic">${obj.desc}</td>
+                        </tr>
+                    `;
+                    els.paramsBody.insertAdjacentHTML('beforeend', row);
+                }
+                els.endpoint.innerText = `${step.endpoint}?${queryString.join('&')}`;
+            } else {
+                els.paramsSection.classList.add('hidden');
+            }
+
+            // Body Logic (JSON vs FormData)
+            els.bodySection.classList.add('hidden');
+            els.formDataSection.classList.add('hidden');
+
+            if (step.body) {
+                if (step.isFormData) {
+                    els.formDataSection.classList.remove('hidden');
+                    els.formDataBody.innerHTML = '';
+                    for (const [key, value] of Object.entries(step.body)) {
+                        const isFile = value.toString().includes('(File)');
+                        const row = `
+                            <tr>
+                                <td class="px-3 py-2 font-mono text-xs ${isFile ? 'text-purple-600 font-bold' : 'text-slate-700'}">${key}</td>
+                                <td class="px-3 py-2 font-mono text-xs text-slate-500 break-all">${value}</td>
+                            </tr>
+                        `;
+                        els.formDataBody.insertAdjacentHTML('beforeend', row);
+                    }
+                } else {
+                    els.bodySection.classList.remove('hidden');
+                    els.bodyDisplay.innerText = JSON.stringify(step.body, null, 2);
+                }
+            }
+
+            // Insight
+            els.insight.innerText = step.insight;
+
+            // Reset Console
+            els.console.classList.add('hidden');
+            
+            // Simulation Logic
+            els.simulateBtn.onclick = () => {
+                els.simulateBtn.innerHTML = `<span class="animate-spin">↻</span> Sending...`;
+                setTimeout(() => {
+                    els.simulateBtn.innerHTML = `<span>🚀</span> Simulate Request`;
+                    els.console.classList.remove('hidden');
+                    els.resBody.innerText = JSON.stringify(step.response, null, 2);
+                    // Auto scroll console
+                    els.console.scrollTop = 0;
+                }, 600);
+            };
+        }
+
+        // --- HELPERS ---
+        function getMethodColor(m, textOnly=false) {
+            const method = m.toUpperCase();
+            if(textOnly) {
+                if(method === 'GET') return 'text-blue-600 bg-blue-50';
+                if(method === 'POST') return 'text-emerald-600 bg-emerald-50';
+                if(method === 'PATCH') return 'text-purple-600 bg-purple-50';
+                if(method === 'DELETE') return 'text-red-600 bg-red-50';
+                return '';
+            }
+            if(method === 'GET') return 'method-get';
+            if(method === 'POST') return 'method-post';
+            if(method === 'PATCH') return 'method-patch';
+            if(method === 'DELETE') return 'method-delete';
+            return 'bg-slate-100 text-slate-600';
+        }
+
+        // Start
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>

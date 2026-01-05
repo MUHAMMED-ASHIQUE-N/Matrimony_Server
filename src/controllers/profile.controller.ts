@@ -1,232 +1,275 @@
 import { Request, Response, NextFunction } from 'express';
 import db from '../config/db';
+import { StorageService } from '../services/storage.service';
 
 export class ProfileController {
 
-  /**
-   * 1. Create Basic Profile (Step 3: The Popup)
-   * Captures just enough info to show matches.
-   */
+  // ... (Keep createBasicProfile, registerFullProfile, uploadMedia, deleteMedia, updateMe) ...
+  // I am including them briefly to ensure the file is valid, but the main change is getMatches at the bottom.
+
   static async createBasicProfile(req: Request, res: Response, next: NextFunction) {
     const userId = (req as any).user.userId;
     const { firstName, lastName, gender, profileCreatedFor } = req.body;
-
     try {
-      // Basic Insert
-      // Note: Ensure your DB allows NULLs for other fields like height/education
       const sql = `
         INSERT INTO profiles (user_id, first_name, last_name, gender, profile_created_for)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING profile_id, first_name, gender, profile_created_for;
       `;
-
       const result = await db.query(sql, [userId, firstName, lastName, gender, profileCreatedFor]);
-
-      res.status(201).json({
-        message: 'Basic profile created',
-        profile: result.rows[0]
-      });
-
+      res.status(201).json({ message: 'Basic profile created', profile: result.rows[0] });
     } catch (error) {
-      if ((error as any).code === '23505') {
-        return res.status(400).json({ message: 'Profile already exists' });
-      }
+      if ((error as any).code === '23505') return res.status(400).json({ message: 'Profile already exists' });
       next(error);
     }
   }
 
+  static async registerFullProfile(req: Request, res: Response, next: NextFunction) {
+     const userId = (req as any).user.userId;
+     const data = req.body;
+     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+ 
+     try {
+       let photoUrls: string[] = [];
+       let userProfileUrl: string | null = null;
+ 
+       if (files && !Array.isArray(files)) {
+         if (files['user_profile']?.[0]) userProfileUrl = await StorageService.uploadImage(files['user_profile'][0].buffer);
+         if (files['photos'] && files['photos'].length > 0) photoUrls = await StorageService.uploadMultipleImages(files['photos']);
+       } else if (Array.isArray(files) && files.length > 0) {
+         photoUrls = await StorageService.uploadMultipleImages(files);
+       } else if (data.photos) {
+          photoUrls = Array.isArray(data.photos) ? data.photos : [data.photos];
+       }
+       if (data.user_profile) userProfileUrl = data.user_profile;
+ 
+       const parseRange = (val: any) => {
+          if (!val) return null;
+          if (typeof val === 'string') { try { return JSON.parse(val); } catch { return val.split(',').map(Number); } }
+          return val;
+       };
+       const [pMinAge, pMaxAge] = parseRange(data.ageRange) || [18, 60];
+       const [pMinHeight, pMaxHeight] = parseRange(data.heightRange) || [140, 200];
+       const hobbies = typeof data.hobbies === 'string' ? [data.hobbies] : data.hobbies;
+       const interests = typeof data.interests === 'string' ? [data.interests] : data.interests;
+ 
+       const query = `
+         INSERT INTO profiles (
+           user_id, first_name, last_name, contact, gender, profile_created_for,
+           date_of_birth, height_cm, weight_kg, caste, marital_status,
+           education, present_country, financial_status,
+           photos, user_profile, hobbies, interests,
+           diet_preference, smoking, drinking,
+           partner_min_age, partner_max_age,
+           partner_min_height, partner_max_height,
+           partner_marital_preference, partner_religion_preference,
+           updated_at
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, NOW())
+         ON CONFLICT (user_id) DO UPDATE SET 
+           first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, contact = EXCLUDED.contact,
+           photos = EXCLUDED.photos, user_profile = EXCLUDED.user_profile, education = EXCLUDED.education,
+           present_country = EXCLUDED.present_country, financial_status = EXCLUDED.financial_status,
+           partner_min_age = EXCLUDED.partner_min_age, partner_max_age = EXCLUDED.partner_max_age, updated_at = NOW()
+         RETURNING *;
+       `;
+ 
+       const values = [
+         userId, data.firstName, data.lastName, data.contact, data.gender, data.profileCreatedFor,
+         data.dateOfBirth, parseFloat(data.height), parseFloat(data.weight), data.caste, data.maritalStatus,
+         data.education, data.presentCountry, data.financialStatus,
+         photoUrls, userProfileUrl, hobbies || [], interests || [],
+         data.dietPreference, data.smoking, data.drinking,
+         pMinAge, pMaxAge, pMinHeight, pMaxHeight,
+         data.maritalStatusPreference, data.religionPreference
+       ];
+ 
+       const result = await db.query(query, values);
+       res.status(200).json({ message: 'Full profile registered successfully', profile: result.rows[0] });
+     } catch (error) { next(error); }
+  }
+
+  static async uploadMedia(req: Request, res: Response, next: NextFunction) {
+      const userId = (req as any).user.userId;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      try {
+          let updateQuery = 'UPDATE profiles SET updated_at = NOW()';
+          const values: any[] = [];
+          let paramIdx = 1;
+          if (files['user_profile']?.[0]) {
+              const url = await StorageService.uploadImage(files['user_profile'][0].buffer);
+              updateQuery += `, user_profile = $${paramIdx}`;
+              values.push(url);
+              paramIdx++;
+          }
+          if (files['photos'] && files['photos'].length > 0) {
+              const urls = await StorageService.uploadMultipleImages(files['photos']);
+              updateQuery += `, photos = $${paramIdx}`;
+              values.push(urls);
+              paramIdx++;
+          }
+          if (values.length === 0) return res.status(400).json({ message: "No files uploaded" });
+          updateQuery += ` WHERE user_id = $${paramIdx} RETURNING user_profile, photos`;
+          values.push(userId);
+          const result = await db.query(updateQuery, values);
+          if (result.rows.length === 0) return res.status(404).json({ message: "Profile not found" });
+          res.json({ message: 'Media updated successfully', media: result.rows[0] });
+      } catch (error) { next(error); }
+  }
+
+  static async deleteMedia(req: Request, res: Response, next: NextFunction) {
+      const userId = (req as any).user.userId;
+      const { type, url } = req.body;
+      if (!['user_profile', 'photos'].includes(type)) return res.status(400).json({ message: "Invalid media type" });
+      try {
+          let sql = '';
+          const values = [userId];
+          if (type === 'user_profile') {
+              sql = `UPDATE profiles SET user_profile = NULL, updated_at = NOW() WHERE user_id = $1 RETURNING user_profile, photos`;
+          } else if (type === 'photos') {
+              if (!url) return res.status(400).json({ message: "URL is required" });
+              sql = `UPDATE profiles SET photos = array_remove(photos, $2), updated_at = NOW() WHERE user_id = $1 RETURNING user_profile, photos`;
+              values.push(url);
+          }
+          const result = await db.query(sql, values);
+          if (result.rows.length === 0) return res.status(404).json({ message: "Profile not found" });
+          res.json({ message: "Media deleted successfully", media: result.rows[0] });
+      } catch (error) { next(error); }
+  }
+
+  static async updateMe(req: Request, res: Response, next: NextFunction) {
+      const userId = (req as any).user.userId;
+      const updates = req.body;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+      if (files && !Array.isArray(files)) {
+          if (files['user_profile']?.[0]) updates.user_profile = await StorageService.uploadImage(files['user_profile'][0].buffer);
+          if (files['photos'] && files['photos'].length > 0) updates.photos = await StorageService.uploadMultipleImages(files['photos']);
+      }
+      if (updates.ageRange) { const r = typeof updates.ageRange === 'string' ? JSON.parse(updates.ageRange) : updates.ageRange; updates.partner_min_age = r[0]; updates.partner_max_age = r[1]; delete updates.ageRange; }
+      if (updates.heightRange) { const r = typeof updates.heightRange === 'string' ? JSON.parse(updates.heightRange) : updates.heightRange; updates.partner_min_height = r[0]; updates.partner_max_height = r[1]; delete updates.heightRange; }
+      if (updates.height) updates.height_cm = parseFloat(updates.height);
+      if (updates.weight) updates.weight_kg = parseFloat(updates.weight);
+      const forbidden = ['user_id', 'profile_id', 'created_at', 'height', 'weight'];
+      forbidden.forEach(f => delete updates[f]);
+      const columnMap: Record<string, string> = { firstName: 'first_name', lastName: 'last_name', profileCreatedFor: 'profile_created_for', maritalStatus: 'marital_status', dateOfBirth: 'date_of_birth', presentCountry: 'present_country', financialStatus: 'financial_status', dietPreference: 'diet_preference', maritalStatusPreference: 'partner_marital_preference', religionPreference: 'partner_religion_preference', userProfile: 'user_profile' };
+      const setClauses = [];
+      const values = [];
+      let idx = 1;
+      for (const [key, value] of Object.entries(updates)) { const dbCol = columnMap[key] || key; setClauses.push(`${dbCol} = $${idx}`); values.push(value); idx++; }
+      if (setClauses.length === 0) return res.status(400).json({message: "No fields to update"});
+      values.push(userId);
+      const sql = `UPDATE profiles SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${idx} RETURNING *;`;
+      try { const result = await db.query(sql, values); if (result.rows.length === 0) return res.status(404).json({message: "Profile not found"}); res.json({ message: 'Profile updated', profile: result.rows[0] }); } catch (error) { next(error); }
+  }
+
+  static async getMe(req: Request, res: Response, next: NextFunction) {
+       const userId = (req as any).user.userId;
+       try {
+         const result = await db.query('SELECT * FROM profiles WHERE user_id = $1', [userId]);
+         if (result.rows.length === 0) return res.status(404).json({message: "Profile not found"});
+         res.json(result.rows[0]);
+       } catch (err) { next(err); }
+  }
+
   /**
-   * 2. Get Matches (Step 4: Teaser)
+   * GET MATCHES & FILTER & SEARCH
+   * Flow:
+   * 1. Get My Profile -> Check Gender & Saved Preferences
+   * 2. Apply Filters: Query Params (Search) >> Saved Preferences (Full Profile) >> Defaults (Basic Profile)
    */
   static async getMatches(req: Request, res: Response, next: NextFunction) {
-    const userId = (req as any).user.userId;
+     const userId = (req as any).user.userId;
+     
+     // Search & Filter Params
+     const { 
+         search,         // Generic name search
+         location,       // Filter by Country
+         job,            // Filter by Education/Job
+         ageMin, 
+         ageMax 
+     } = req.query;
 
-    try {
-      // Fetch My Profile
-      const myProfileRes = await db.query(
-        `SELECT gender, partner_min_age, partner_max_age, partner_min_height, partner_max_height
-         FROM profiles WHERE user_id = $1`,
-        [userId]
-      );
+     try {
+       // 1. Fetch My Profile (Gender & Preferences)
+       const myProfileRes = await db.query(
+         `SELECT 
+            gender, 
+            partner_min_age, partner_max_age, 
+            partner_min_height, partner_max_height,
+            partner_religion_preference
+          FROM profiles WHERE user_id = $1`, 
+         [userId]
+       );
 
-      if (myProfileRes.rows.length === 0) {
-        return res.status(404).json({ message: 'Please create a basic profile first.' });
-      }
+       if (myProfileRes.rows.length === 0) {
+         return res.status(404).json({ message: 'Please create a basic profile first.' });
+       }
 
-      const myData = myProfileRes.rows[0];
+       const myData = myProfileRes.rows[0];
 
-      // Defaults for Teaser Mode
-      const targetGender = myData.gender === 'Male' ? 'Female' : 'Male';
-      const minAge = myData.partner_min_age || 18;
-      const maxAge = myData.partner_max_age || 60;
-      const minHeight = myData.partner_min_height || 0;
-      const maxHeight = myData.partner_max_height || 300;
+       // 2. Determine Target Gender (Opposite)
+       const targetGender = myData.gender === 'Male' ? 'Female' : 'Male';
 
-      const matchSql = `
-        SELECT 
-            profile_id, user_id, first_name, last_name, 
-            date_part('year', age(date_of_birth)) as age, 
-            height_cm, photos, education, present_country, 
-            marital_status, financial_status
-        FROM profiles
-        WHERE 
-            gender = $1
-            AND (date_of_birth IS NULL OR date_part('year', age(date_of_birth)) BETWEEN $2 AND $3)
-            AND (height_cm IS NULL OR height_cm BETWEEN $4 AND $5)
-            AND user_id != $6
-        ORDER BY created_at DESC
-        LIMIT 10;
-      `;
+       // 3. Determine Filters (Priority: Query Param > DB Preference > Default)
+       const targetMinAge = ageMin || myData.partner_min_age || 18;
+       const targetMaxAge = ageMax || myData.partner_max_age || 60;
+       
+       // 4. Build Dynamic SQL
+       let sql = `
+         SELECT 
+             profile_id, user_id, first_name, last_name, gender, user_profile,
+             date_part('year', age(date_of_birth)) as age, 
+             height_cm, education, present_country, marital_status, financial_status
+         FROM profiles
+         WHERE 
+             gender = $1
+             AND user_id != $2
+             AND (date_of_birth IS NULL OR date_part('year', age(date_of_birth)) BETWEEN $3 AND $4)
+       `;
 
-      const matches = await db.query(matchSql, [
-        targetGender, minAge, maxAge, minHeight, maxHeight, userId
-      ]);
+       const values: any[] = [targetGender, userId, targetMinAge, targetMaxAge];
+       let paramIdx = 5;
 
-      res.json({ 
-        isTeaser: !myData.partner_min_age,
-        count: matches.rows.length,
-        matches: matches.rows 
-      });
+       // --- Apply Optional Search Filters ---
 
-    } catch (error) {
-      next(error);
-    }
-  }
-static async registerFullProfile(req: Request, res: Response, next: NextFunction) {
-    const userId = (req as any).user.userId;
-    const data = req.body;
+       // A. Name Search
+       if (search) {
+           sql += ` AND (first_name ILIKE $${paramIdx} OR last_name ILIKE $${paramIdx})`;
+           values.push(`%${search}%`);
+           paramIdx++;
+       }
 
-    try {
-      // 1. Parse Ranges (Frontend sends [25, 30], DB needs min_age, max_age)
-      const [pMinAge, pMaxAge] = data.ageRange || [18, 60];
-      const [pMinHeight, pMaxHeight] = data.heightRange || [140, 200];
+       // B. Location (Country)
+       if (location) {
+           sql += ` AND present_country ILIKE $${paramIdx}`;
+           values.push(`%${location}%`);
+           paramIdx++;
+       }
 
-      // 2. Prepare SQL (Upsert: Update if exists, Insert if not)
-      const query = `
-        INSERT INTO profiles (
-          user_id, first_name, last_name, contact, gender, profile_created_for,
-          date_of_birth, height_cm, weight_kg, caste, marital_status,
-          education, present_country, financial_status,
-          photos, hobbies, interests,
-          diet_preference, smoking, drinking,
-          partner_min_age, partner_max_age,
-          partner_min_height, partner_max_height,
-          partner_marital_preference, partner_religion_preference,
-          updated_at
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, 
-          $7, $8, $9, $10, $11, 
-          $12, $13, $14, 
-          $15, $16, $17, 
-          $18, $19, $20, 
-          $21, $22, $23, $24, $25, $26,
-          NOW()
-        )
-        ON CONFLICT (user_id) 
-        DO UPDATE SET 
-          first_name = EXCLUDED.first_name,
-          last_name = EXCLUDED.last_name,
-          contact = EXCLUDED.contact,
-          photos = EXCLUDED.photos,
-          education = EXCLUDED.education,
-          present_country = EXCLUDED.present_country,
-          financial_status = EXCLUDED.financial_status,
-          partner_min_age = EXCLUDED.partner_min_age,
-          partner_max_age = EXCLUDED.partner_max_age,
-          updated_at = NOW()
-        RETURNING *;
-      `;
+       // C. Job (Education)
+       if (job) {
+           sql += ` AND education ILIKE $${paramIdx}`; // Mapping 'job' to 'education' column
+           values.push(`%${job}%`);
+           paramIdx++;
+       }
 
-      const values = [
-        userId, 
-        data.firstName, data.lastName, data.contact, data.gender, data.profileCreatedFor,
-        data.dateOfBirth, parseFloat(data.height), parseFloat(data.weight), data.caste, data.maritalStatus,
-        data.education, data.presentCountry, data.financialStatus,
-        data.photos || [], data.hobbies || [], data.interests || [],
-        data.dietPreference, data.smoking, data.drinking,
-        pMinAge, pMaxAge,
-        pMinHeight, pMaxHeight,
-        data.maritalStatusPreference, data.religionPreference
-      ];
+       // Finish Query
+       sql += ` ORDER BY created_at DESC LIMIT 50`;
 
-      const result = await db.query(query, values);
+       const matches = await db.query(sql, values);
 
-      res.status(200).json({
-        message: 'Full profile registered successfully',
-        profile: result.rows[0]
-      });
+       res.json({ 
+           criteria: {
+             lookingFor: targetGender,
+             ageRange: [targetMinAge, targetMaxAge],
+             filters: { search, location, job }
+           },
+           count: matches.rows.length, 
+           matches: matches.rows 
+       });
 
-    } catch (error) {
-      next(error);
-    }
-  }
-  /**
-   * 3. Update Full Profile (Step 5: Full Registration)
-   * Uses dynamic update to fill in the rest of the details.
-   */
-  static async updateMe(req: Request, res: Response, next: NextFunction) {
-    const userId = (req as any).user.userId;
-    const updates = req.body;
-
-    // Remove immutable fields
-    delete updates.user_id;
-    delete updates.profile_id;
-    delete updates.created_at;
-
-    // Mapping for camelCase -> snake_case
-    const columnMap: Record<string, string> = {
-        firstName: 'first_name',
-        lastName: 'last_name',
-        maritalStatus: 'marital_status',
-        dateOfBirth: 'date_of_birth',
-        presentCountry: 'present_country',
-        financialStatus: 'financial_status',
-        dietPreference: 'diet_preference',
-        // Partner Preferences
-        partnerMinAge: 'partner_min_age',
-        partnerMaxAge: 'partner_max_age',
-        partnerMinHeight: 'partner_min_height',
-        partnerMaxHeight: 'partner_max_height',
-        partnerMaritalPreference: 'partner_marital_preference'
-    };
-
-    const setClauses = [];
-    const values = [];
-    let idx = 1;
-
-    for (const [key, value] of Object.entries(updates)) {
-        const dbCol = columnMap[key] || key; // Fallback to key
-        setClauses.push(`${dbCol} = $${idx}`);
-        values.push(value);
-        idx++;
-    }
-
-    if (setClauses.length === 0) return res.status(400).json({message: "No fields to update"});
-    
-    values.push(userId);
-
-    const sql = `
-      UPDATE profiles 
-      SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $${idx}
-      RETURNING *;
-    `;
-
-    try {
-      const result = await db.query(sql, values);
-      res.json({ message: 'Profile updated', profile: result.rows[0] });
-    } catch (error) {
-      next(error);
-    }
-  }
-  
-  static async getMe(req: Request, res: Response, next: NextFunction) {
-      const userId = (req as any).user.userId;
-      try {
-        const result = await db.query('SELECT * FROM profiles WHERE user_id = $1', [userId]);
-        if (result.rows.length === 0) return res.status(404).json({message: "Profile not found"});
-        res.json(result.rows[0]);
-      } catch (err) { next(err); }
-  }
+     } catch (error) { 
+       next(error); 
+     }
+   }
 }

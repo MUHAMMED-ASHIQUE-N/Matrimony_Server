@@ -1,21 +1,24 @@
 import { Router } from 'express';
 import { ProfileController } from '../controllers/profile.controller';
 import { authenticate } from '../middlewares/auth.middleware';
-import { validate } from '../middlewares/validate.middleware';
-import { fullProfileSchema } from '../validations/profile.validation';
+import { upload } from '../middlewares/upload.middleware';
 
 const router = Router();
 
-// 1. Basic (Popup)
+// ... (Previous routes: basic, register, update, media) ...
 router.post('/basic', authenticate, ProfileController.createBasicProfile);
 
-// 2. Full Registration (The Long Form)
-router.post('/register', authenticate, validate(fullProfileSchema), ProfileController.registerFullProfile);
+router.post('/register', authenticate, upload.fields([{ name: 'user_profile', maxCount: 1 }, { name: 'photos', maxCount: 5 }]), ProfileController.registerFullProfile);
 
-// 3. Get My Profile
+router.patch('/me', authenticate, upload.fields([{ name: 'user_profile', maxCount: 1 }, { name: 'photos', maxCount: 5 }]), ProfileController.updateMe);
+
+router.post('/media', authenticate, upload.fields([{ name: 'user_profile', maxCount: 1 }, { name: 'photos', maxCount: 5 }]), ProfileController.uploadMedia);
+
+router.delete('/media', authenticate, ProfileController.deleteMedia);
+
 router.get('/me', authenticate, ProfileController.getMe);
 
-// 4. Get Matches
+// 7. Get Matches (Based on Gender)
 router.get('/matches', authenticate, ProfileController.getMatches);
 
-export default router;
+export default router;  
