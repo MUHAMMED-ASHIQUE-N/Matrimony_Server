@@ -42,12 +42,20 @@
             background-color: #E2E8F0;
         }
         .tree-item:last-child .tree-line { display: none; }
+        
+        /* Category Header in Nav */
+        .nav-category {
+            padding: 0.75rem 1rem 0.25rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #94A3B8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
-    <!-- Chosen Palette: Modern Tech-Romance (Slate backgrounds, Pink/Rose primary accents for Matrimony context) -->
-</head>
+    </head>
 <body class="min-h-screen flex flex-col overflow-hidden">
 
-    <!-- Header -->
     <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 z-30">
         <div class="max-w-[1600px] mx-auto px-4 h-full flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -65,40 +73,26 @@
 
     <main class="flex-grow max-w-[1600px] mx-auto w-full px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden h-[calc(100vh-64px)]">
         
-        <!-- LEFT SIDEBAR: Workflow Navigation -->
         <div class="lg:col-span-3 flex flex-col h-full overflow-hidden bg-white rounded-xl border border-slate-200 shadow-sm">
             <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-semibold text-slate-800 text-sm uppercase tracking-wide">User Journey</h3>
-                <p class="text-xs text-slate-500 mt-1">Step-by-step onboarding & matching flow.</p>
+                <h3 class="font-semibold text-slate-800 text-sm uppercase tracking-wide">API Reference</h3>
+                <p class="text-xs text-slate-500 mt-1">Categorized endpoints for easier navigation.</p>
             </div>
             
             <nav class="flex-1 overflow-y-auto p-2 space-y-1" id="workflow-nav">
-                <!-- Javascript will populate this -->
-            </nav>
-
-            <div class="p-4 border-t border-slate-100 bg-slate-50">
-                <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Utilities</h4>
-                <div id="utility-nav" class="grid grid-cols-2 gap-2">
-                    <!-- JS populated -->
-                </div>
-            </div>
+                </nav>
         </div>
 
-        <!-- CENTER PANEL: Interaction Stage -->
         <div class="lg:col-span-6 flex flex-col h-full space-y-4 overflow-hidden">
             
-            <!-- Context Banner -->
             <div id="content-header" class="flex-shrink-0 fade-in px-1">
-                <!-- JS Populated -->
-            </div>
+                </div>
 
-            <!-- Request Card (Scrollable Body) -->
             <div class="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col fade-in">
-                <!-- Card Header -->
                 <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
                     <div class="flex items-center gap-3">
                         <span id="req-method-badge" class="px-2 py-1 rounded text-xs font-bold uppercase font-mono">METHOD</span>
-                        <span class="text-xs text-slate-400 font-mono">/api/v1</span>
+                        <span class="text-xs text-slate-400 font-mono">/api</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span id="auth-badge" class="hidden px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-700 border border-amber-200 font-bold">🔒 AUTH REQ</span>
@@ -106,10 +100,8 @@
                     </div>
                 </div>
 
-                <!-- Card Content (Scrollable) -->
                 <div class="flex-1 overflow-y-auto p-5 space-y-6">
                     
-                    <!-- Endpoint Display -->
                     <div>
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Endpoint URL</label>
                         <div class="flex items-center bg-slate-100 rounded border border-slate-200 p-2.5 font-mono text-sm text-slate-700 break-all group relative">
@@ -118,7 +110,6 @@
                         </div>
                     </div>
 
-                    <!-- Parameter Visualization Table -->
                     <div id="params-section" class="hidden">
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex justify-between">
                             <span>Query Parameters (Filters)</span>
@@ -134,13 +125,11 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100" id="params-table-body">
-                                    <!-- JS Populated -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                     </div>
 
-                    <!-- JSON Body Visualization -->
                     <div id="body-section" class="hidden">
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Request Body (JSON)</label>
                         <div class="bg-slate-900 rounded-lg p-4 border border-slate-800 shadow-inner group">
@@ -148,7 +137,6 @@
                         </div>
                     </div>
 
-                    <!-- Form Data Visualization -->
                     <div id="form-data-section" class="hidden">
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Request Body (Form Data)</label>
                         <div class="border border-slate-200 rounded-lg overflow-hidden">
@@ -160,8 +148,7 @@
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-slate-100" id="form-data-body">
-                                    <!-- Populated by JS -->
-                                </tbody>
+                                    </tbody>
                             </table>
                         </div>
                         <p class="text-[10px] text-slate-400 mt-2 italic">* Complex objects like "ageRange" must be sent as Stringified JSON in form-data.</p>
@@ -169,7 +156,6 @@
 
                 </div>
 
-                <!-- Action Footer -->
                 <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center flex-shrink-0">
                     <span class="text-xs text-slate-400 italic" id="req-desc-footer">Simulates API call...</span>
                     <button id="simulate-btn" class="bg-pink-600 hover:bg-pink-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2">
@@ -178,7 +164,6 @@
                 </div>
             </div>
 
-            <!-- Response Console (Fixed Height) -->
             <div id="response-console" class="h-48 bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden fade-in flex flex-col hidden flex-shrink-0">
                 <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
                     <span class="text-xs text-emerald-400 font-mono font-bold">HTTP 200 OK</span>
@@ -191,16 +176,13 @@
 
         </div>
 
-        <!-- RIGHT PANEL: Visual Context -->
         <div class="lg:col-span-3 flex flex-col h-full space-y-6 overflow-hidden">
             
-            <!-- Entity Relationship Diagram (CSS) -->
             <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex-shrink-0">
                 <h3 class="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2">
                     <span>🗄️</span> Database Context
                 </h3>
                 <div class="relative pl-2">
-                    <!-- User Node -->
                     <div class="relative pl-6 pb-6 tree-item">
                         <div class="tree-line"></div>
                         <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-indigo-500 rounded-full flex items-center justify-center z-10">
@@ -212,7 +194,6 @@
                         </div>
                     </div>
 
-                    <!-- Profile Node -->
                     <div class="relative pl-6 pb-6 tree-item">
                         <div class="tree-line"></div>
                         <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-pink-500 rounded-full flex items-center justify-center z-10">
@@ -224,7 +205,6 @@
                         </div>
                     </div>
 
-                    <!-- Media Node -->
                     <div class="relative pl-6 pb-6 tree-item">
                         <div class="tree-line"></div>
                         <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-purple-500 rounded-full flex items-center justify-center z-10">
@@ -236,7 +216,6 @@
                         </div>
                     </div>
 
-                    <!-- Preferences Node -->
                     <div class="relative pl-6 tree-item">
                         <div class="absolute left-0 top-1 w-6 h-6 bg-white border-2 border-emerald-500 rounded-full flex items-center justify-center z-10">
                             <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
@@ -249,7 +228,6 @@
                 </div>
             </div>
 
-            <!-- Dynamic Insight Box -->
             <div class="bg-slate-800 text-white p-5 rounded-xl shadow-md border border-slate-700 flex-1 overflow-y-auto">
                 <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">Logic Insight</h4>
                 <p id="logic-insight" class="text-sm leading-relaxed text-slate-200">
@@ -265,154 +243,215 @@
         // --- API WORKFLOW DATA ---
         // Contains the Matrimony logic mapped to the UI structure
         
-        const workflowSteps = [
-            {
-                id: 'step1',
-                title: '1. User Signup',
-                desc: 'Register via Email/Phone. Generates OTP. System creates a User record with verified=false.',
-                method: 'POST',
-                endpoint: '/auth/signup',
-                authReq: false,
-                isFormData: false,
-                body: { "identifier": "ashique@example.com", "type": "EMAIL", "password": "pass", "confirmPassword": "pass" },
-                params: null,
-                insight: "The AuthService hashes the password using bcrypt and generates a 6-digit random OTP. NotificationService sends the email asynchronously.",
-                response: { "message": "Registration successful. OTP sent.", "userId": "uuid-1234", "isNew": true }
-            },
-            {
-                id: 'step2',
-                title: '2. Verify OTP',
-                desc: 'Verify the code sent to email. Returns JWT Token on success.',
-                method: 'POST',
-                endpoint: '/auth/verify-otp',
-                authReq: false,
-                isFormData: false,
-                body: { "identifier": "ashique@example.com", "type": "EMAIL", "otp": "123456" },
-                params: null,
-                insight: "Upon verification, the `is_verified` flag in the Users table is set to TRUE. A JWT token signed with user_id is returned for future requests.",
-                response: { "message": "Verified successfully", "token": "eyJhbGciOiJIUz...", "userId": "uuid-1234" }
-            },
-            {
-                id: 'step3',
-                title: '3. Create Basic Profile',
-                desc: 'Onboarding popup. Captures essential Gender info needed for initial matchmaking.',
-                method: 'POST',
-                endpoint: '/profile/basic',
-                authReq: true,
-                isFormData: false,
-                body: { "firstName": "Ashique", "gender": "Male", "profileCreatedFor": "Self" },
-                params: null,
-                insight: "Creates a row in Profiles table linked to User. Gender is crucial here as it determines the default 'Looking For' logic (Male -> Female).",
-                response: { "message": "Basic profile created", "profile": { "id": "p-1", "gender": "Male" } }
-            },
-            {
-                id: 'step4',
-                title: '4. Initial Matchmaking',
-                desc: 'Get matches immediately after basic profile. Uses defaults (Age 18-60).',
-                method: 'GET',
-                endpoint: '/profile/matches',
-                authReq: true,
-                isFormData: false,
-                body: null,
-                params: null,
-                insight: "Controller detects Gender='Male'. Since no specific preferences are saved yet, it defaults to querying ALL 'Females' aged 18-60.",
-                response: { 
-                    "criteria": { "lookingFor": "Female", "ageRange": [18, 60] },
-                    "matches": [{ "name": "Priya", "age": 24 }, { "name": "Anjali", "age": 28 }] 
-                }
-            },
-            {
-                id: 'step5',
-                title: '5. Full Registration',
-                desc: 'Detailed form with Photos and Partner Preferences. **Must be Form Data**.',
-                method: 'POST',
-                endpoint: '/profile/register',
-                authReq: true,
-                isFormData: true,
-                body: { 
-                    "firstName": "Ashique",
-                    "lastName": "Dev",
-                    "contact": "+919876543210",
-                    "gender": "Male",
-                    "profileCreatedFor": "Self",
-                    "dateOfBirth": "1998-05-20",
-                    "height": "175",
-                    "weight": "70",
-                    "caste": "Muslim - Sunni",
-                    "maritalStatus": "Single",
-                    "education": "B.Tech Computer Science",
-                    "presentCountry": "India",
-                    "financialStatus": "Middle Class",
-                    "dietPreference": "Non-Veg",
-                    "smoking": "No",
-                    "drinking": "No",
-                    "ageRange": "[20, 28]",
-                    "heightRange": "[150, 170]",
-                    "maritalStatusPreference": "Single",
-                    "religionPreference": "Muslim",
-                    "hobbies": "Coding",
-                    "interests": "Technology",
-                    "user_profile": "(File Object)",
-                    "photos": "(Multiple File Objects)"
+        // Categorized Workflow Steps
+        const apiCategories = {
+            "Authentication": [
+                {
+                    id: 'auth_signup',
+                    title: '1. User Signup',
+                    desc: 'Register via Email/Phone. Generates OTP. System creates a User record with verified=false.',
+                    method: 'POST',
+                    endpoint: '/auth/signup',
+                    authReq: false,
+                    isFormData: false,
+                    body: { "identifier": "ashique@example.com", "type": "EMAIL", "password": "pass", "confirmPassword": "pass" },
+                    params: null,
+                    insight: "The AuthService hashes the password using bcrypt and generates a 6-digit random OTP. NotificationService sends the email asynchronously.",
+                    response: { "message": "Registration successful. OTP sent.", "userId": "uuid-1234", "isNew": true }
                 },
-                params: null,
-                insight: "Uses Multer to upload images to Cloudinary. Saves URLs to `user_profile` and `photos` columns. Stringified JSON fields like `ageRange` are parsed manually in the Controller.",
-                response: { "message": "Full profile registered", "profile": { "partner_min_age": 20, "partner_max_age": 28, "photos": ["url1", "url2"] } }
-            },
-            {
-                id: 'step6',
-                title: '6. Smart Matching',
-                desc: 'Get matches again. Now uses the saved preferences (Age 22-28).',
-                method: 'GET',
-                endpoint: '/profile/matches',
-                authReq: true,
-                isFormData: false,
-                body: null,
-                params: null,
-                insight: "Controller sees the user now has preferences saved (min_age=22). It applies these filters automatically instead of the defaults.",
-                response: { 
-                    "criteria": { "lookingFor": "Female", "ageRange": [22, 28] },
-                    "matches": [{ "name": "Sarah", "age": 25, "location": "Kerala" }] 
+                {
+                    id: 'auth_verify',
+                    title: '2. Verify OTP',
+                    desc: 'Verify the code sent to email. Returns JWT Token on success.',
+                    method: 'POST',
+                    endpoint: '/auth/verify-otp',
+                    authReq: false,
+                    isFormData: false,
+                    body: { "identifier": "ashique@example.com", "type": "EMAIL", "otp": "123456" },
+                    params: null,
+                    insight: "Upon verification, the `is_verified` flag in the Users table is set to TRUE. A JWT token signed with user_id is returned for future requests.",
+                    response: { "message": "Verified successfully", "token": "eyJhbGciOiJIUz...", "userId": "uuid-1234" }
                 }
-            },
-            {
-                id: 'step7',
-                title: '7. Advanced Search & Filter',
-                desc: 'Override preferences with specific search criteria (Job, Location, Age).',
-                method: 'GET',
-                endpoint: '/profile/matches',
-                authReq: true,
-                isFormData: false,
-                body: null,
-                params: {
-                    "search": { val: "Dr.", desc: "Filter by Name/Title" },
-                    "job": { val: "Doctor", desc: "Filter by Education/Job" },
-                    "location": { val: "Dubai", desc: "Filter by Country" },
-                    "ageMin": { val: "25", desc: "Override Min Age" },
-                    "ageMax": { val: "35", desc: "Override Max Age" }
+            ],
+            "Profile Management": [
+                {
+                    id: 'prof_basic',
+                    title: '3. Create Basic Profile',
+                    desc: 'Onboarding popup. Captures essential Gender info needed for initial matchmaking.',
+                    method: 'POST',
+                    endpoint: '/profile/basic',
+                    authReq: true,
+                    isFormData: false,
+                    body: { "firstName": "Ashique", "gender": "Male", "profileCreatedFor": "Self" },
+                    params: null,
+                    insight: "Creates a row in Profiles table linked to User. Gender is crucial here as it determines the default 'Looking For' logic (Male -> Female).",
+                    response: { "message": "Basic profile created", "profile": { "id": "p-1", "gender": "Male" } }
                 },
-                insight: "Query parameters take priority over database preferences. The SQL query dynamically appends `AND job LIKE '%Doctor%'` and `AND country = 'Dubai'`.",
-                response: { 
-                    "criteria": { 
-                        "lookingFor": "Female", 
-                        "filters": { "job": "Doctor", "location": "Dubai" } 
+                {
+                    id: 'prof_full',
+                    title: '4. Full Registration',
+                    desc: 'Detailed form with Photos and Partner Preferences. **Must be Form Data**.',
+                    method: 'POST',
+                    endpoint: '/profile/register',
+                    authReq: true,
+                    isFormData: true,
+                    body: { 
+                        "firstName": "Ashique", "lastName": "Dev", "contact": "+919876543210", 
+                        "gender": "Male", "profileCreatedFor": "Self", "dateOfBirth": "1998-05-20", 
+                        "height": "175", "weight": "70", "caste": "Muslim - Sunni", 
+                        "maritalStatus": "Single", "education": "B.Tech Computer Science", 
+                        "presentCountry": "India", "financialStatus": "Middle Class", 
+                        "dietPreference": "Non-Veg", "smoking": "No", "drinking": "No", 
+                        "ageRange": "[20, 28]", "heightRange": "[150, 170]", 
+                        "maritalStatusPreference": "Single", "religionPreference": "Muslim", 
+                        "hobbies": "Coding", "interests": "Technology", 
+                        "user_profile": "(File Object)", "photos": "(Multiple File Objects)",
+                        "tagline": "Looking for a meaningful connection", "aboutMe": "I am a software engineer...",
+                        "occupation": "Software Engineer", "company": "Tech Corp", "annualIncome": "12 LPA",
+                        "college": "NIT Calicut", "passoutYear": "2020", "motherTongue": "Malayalam", "religion": "Islam"
                     },
-                    "matches": [{ "name": "Dr. Amina", "age": 29, "job": "MBBS Doctor", "country": "Dubai" }] 
+                    params: null,
+                    insight: "Uses Multer to upload images to Cloudinary. Saves URLs to `user_profile` and `photos` columns. Stringified JSON fields like `ageRange` are parsed manually in the Controller.",
+                    response: { "message": "Full profile registered successfully", "profile": { "partner_min_age": 20, "partner_max_age": 28, "photos": ["url1", "url2"] } }
+                },
+                {
+                    id: 'prof_update',
+                    title: '5. Update Profile',
+                    desc: 'Partial update of profile fields and media.',
+                    method: 'PATCH',
+                    endpoint: '/profile/me',
+                    authReq: true,
+                    isFormData: true,
+                    body: { "height": "180", "aboutMe": "Updated bio...", "photos": "(New File)" },
+                    params: null,
+                    insight: "Dynamically updates provided fields. Can handle text fields and file uploads simultaneously.",
+                    response: { "message": "Profile updated", "profile": { "height_cm": 180, "about_me": "Updated bio..." } }
+                },
+                {
+                    id: 'prof_get_me',
+                    title: '6. Get My Profile',
+                    desc: 'Fetch full profile details of the logged-in user.',
+                    method: 'GET',
+                    endpoint: '/profile/me',
+                    authReq: true,
+                    isFormData: false,
+                    body: null,
+                    params: null,
+                    insight: "Returns all profile columns including photos and preferences for the authenticated user.",
+                    response: { "profile_id": "p-1", "first_name": "Ashique", "gender": "Male", "photos": ["url1"], "partner_min_age": 20 }
                 }
-            }
-        ];
-
-        const utilities = [
-            { id: 'u1', label: 'Upload Media', method: 'POST', endpoint: '/profile/media', authReq: true, isFormData: true, body: { type: 'form-data', user_profile: '(File)', photos: '(Files)' } },
-            { id: 'u2', label: 'Delete Media', method: 'DELETE', endpoint: '/profile/media', authReq: true, isFormData: false, body: { type: 'photos', url: 'img_url...' } },
-            { id: 'u3', label: 'Get My Profile', method: 'GET', endpoint: '/profile/me', authReq: true, isFormData: false, body: null },
-            { id: 'u4', label: 'Update Profile', method: 'PATCH', endpoint: '/profile/me', authReq: true, isFormData: true, body: { height: 180, photos: '(File)' } }
-        ];
+            ],
+            "Media Management": [
+                {
+                    id: 'media_upload',
+                    title: '7. Upload Media',
+                    desc: 'Standalone endpoint to upload profile or gallery images.',
+                    method: 'POST',
+                    endpoint: '/profile/media',
+                    authReq: true,
+                    isFormData: true,
+                    body: { "user_profile": "(File)", "photos": "(Files)" },
+                    params: null,
+                    insight: "Updates `user_profile` or appends/replaces `photos` array. Useful for dedicated media management screens.",
+                    response: { "message": "Media updated successfully", "media": { "user_profile": "url...", "photos": ["url1", "url2"] } }
+                },
+                {
+                    id: 'media_delete',
+                    title: '8. Delete Media',
+                    desc: 'Remove profile picture or specific gallery photo.',
+                    method: 'DELETE',
+                    endpoint: '/profile/media',
+                    authReq: true,
+                    isFormData: false,
+                    body: { "type": "photos", "url": "https://res.cloudinary.com/..." },
+                    params: null,
+                    insight: "Removes the URL from the database array (for photos) or sets the column to NULL (for user_profile).",
+                    response: { "message": "Media deleted successfully", "media": { "photos": ["url1"] } }
+                }
+            ],
+            "Matchmaking": [
+                {
+                    id: 'match_initial',
+                    title: '9. Initial Matchmaking',
+                    desc: 'Get matches immediately after basic profile. Uses defaults (Age 18-60).',
+                    method: 'GET',
+                    endpoint: '/profile/matches',
+                    authReq: true,
+                    isFormData: false,
+                    body: null,
+                    params: null,
+                    insight: "Controller detects Gender='Male'. Since no specific preferences are saved yet, it defaults to querying ALL 'Females' aged 18-60.",
+                    response: { 
+                        "criteria": { "lookingFor": "Female", "ageRange": [18, 60] },
+                        "matches": [{ "name": "Priya", "age": 24 }, { "name": "Anjali", "age": 28 }] 
+                    }
+                },
+                {
+                    id: 'match_smart',
+                    title: '10. Smart Matching',
+                    desc: 'Get matches using saved preferences (Age 22-28, Height, etc.).',
+                    method: 'GET',
+                    endpoint: '/profile/matches',
+                    authReq: true,
+                    isFormData: false,
+                    body: null,
+                    params: null,
+                    insight: "Controller sees the user now has preferences saved (min_age=22). It applies these filters automatically instead of the defaults.",
+                    response: { 
+                        "criteria": { "lookingFor": "Female", "ageRange": [22, 28] },
+                        "matches": [{ "name": "Sarah", "age": 25, "location": "Kerala" }] 
+                    }
+                },
+                {
+                    id: 'match_search',
+                    title: '11. Advanced Search & Filter',
+                    desc: 'Override preferences with specific search criteria (Job, Location, Age).',
+                    method: 'GET',
+                    endpoint: '/profile/matches',
+                    authReq: true,
+                    isFormData: false,
+                    body: null,
+                    params: {
+                        "search": { val: "Dr.", desc: "Filter by Name/Title" },
+                        "job": { val: "Doctor", desc: "Filter by Education/Job" },
+                        "location": { val: "Dubai", desc: "Filter by Country" },
+                        "ageMin": { val: "25", desc: "Override Min Age" },
+                        "ageMax": { val: "35", desc: "Override Max Age" }
+                    },
+                    insight: "Query parameters take priority over database preferences. The SQL query dynamically appends `AND job LIKE '%Doctor%'` and `AND country = 'Dubai'`.",
+                    response: { 
+                        "criteria": { 
+                            "lookingFor": "Female", 
+                            "filters": { "job": "Doctor", "location": "Dubai" } 
+                        },
+                        "matches": [{ "name": "Dr. Amina", "age": 29, "job": "MBBS Doctor", "country": "Dubai" }] 
+                    }
+                },
+                {
+                    id: 'match_view',
+                    title: '12. View Match Profile',
+                    desc: 'Fetch full profile details of a specific match by ID.',
+                    method: 'GET',
+                    endpoint: '/profile/uuid-5678',
+                    authReq: true,
+                    isFormData: false,
+                    body: null,
+                    params: null,
+                    insight: "Fetches specific profile by ID. Used when user clicks on a card in the match feed. Returns full public details including all photos.",
+                    response: { 
+                        "profile_id": "uuid-5678",
+                        "first_name": "Sarah", 
+                        "age": 25, 
+                        "photos": ["url1", "url2"],
+                        "hobbies": ["Travel", "Coding"] 
+                    }
+                }
+            ]
+        };
 
         // --- STATE & DOM ---
-        let currentStepId = 'step1';
+        let currentStepId = 'auth_signup';
         const navContainer = document.getElementById('workflow-nav');
-        const utilContainer = document.getElementById('utility-nav');
         const headerContainer = document.getElementById('content-header');
         
         // Element Refs
@@ -436,58 +475,40 @@
         // --- INIT ---
         function init() {
             renderNav();
-            renderUtils();
-            loadStep(workflowSteps[0]);
+            // Load first step of first category
+            const firstStep = Object.values(apiCategories)[0][0];
+            loadStep(firstStep);
         }
 
         // --- RENDERING ---
         function renderNav() {
             navContainer.innerHTML = '';
-            workflowSteps.forEach(step => {
-                const btn = document.createElement('button');
-                const isActive = step.id === currentStepId;
-                btn.className = `w-full text-left px-4 py-3 text-sm font-medium transition-all duration-200 flex items-center justify-between group ${isActive ? 'step-active text-pink-700 bg-pink-50' : 'step-inactive text-slate-600'}`;
-                
-                btn.innerHTML = `
-                    <span class="truncate pr-2">${step.title}</span>
-                    <span class="text-[10px] font-mono opacity-0 group-hover:opacity-100 ${isActive ? 'opacity-100' : ''} ${getMethodColor(step.method, true)} px-1.5 py-0.5 rounded">${step.method}</span>
-                `;
-                
-                btn.onclick = () => {
-                    currentStepId = step.id;
-                    renderNav();
-                    loadStep(step);
-                };
-                navContainer.appendChild(btn);
-            });
-        }
+            
+            for (const [category, steps] of Object.entries(apiCategories)) {
+                // Category Header
+                const catHeader = document.createElement('div');
+                catHeader.className = 'nav-category';
+                catHeader.innerText = category;
+                navContainer.appendChild(catHeader);
 
-        function renderUtils() {
-            utilContainer.innerHTML = '';
-            utilities.forEach(util => {
-                const btn = document.createElement('button');
-                btn.className = 'text-[10px] bg-white border border-slate-200 hover:border-pink-300 hover:text-pink-600 text-slate-500 py-2 rounded transition-colors shadow-sm';
-                btn.innerText = util.label;
-                btn.onclick = () => {
-                    // Quick load utility logic
-                    loadStep({
-                        title: `Utility: ${util.label}`,
-                        desc: "Helper endpoint for profile management.",
-                        method: util.method,
-                        endpoint: util.endpoint,
-                        authReq: util.authReq,
-                        isFormData: util.isFormData,
-                        body: util.body,
-                        params: null,
-                        insight: "Direct database manipulation via specific utility controller methods.",
-                        response: { success: true }
-                    });
-                    // Reset nav highlight
-                    currentStepId = null;
-                    renderNav();
-                };
-                utilContainer.appendChild(btn);
-            });
+                steps.forEach(step => {
+                    const btn = document.createElement('button');
+                    const isActive = step.id === currentStepId;
+                    btn.className = `w-full text-left px-4 py-3 text-sm font-medium transition-all duration-200 flex items-center justify-between group ${isActive ? 'step-active text-pink-700 bg-pink-50' : 'step-inactive text-slate-600'}`;
+                    
+                    btn.innerHTML = `
+                        <span class="truncate pr-2">${step.title}</span>
+                        <span class="text-[10px] font-mono opacity-0 group-hover:opacity-100 ${isActive ? 'opacity-100' : ''} ${getMethodColor(step.method, true)} px-1.5 py-0.5 rounded">${step.method}</span>
+                    `;
+                    
+                    btn.onclick = () => {
+                        currentStepId = step.id;
+                        renderNav();
+                        loadStep(step);
+                    };
+                    navContainer.appendChild(btn);
+                });
+            }
         }
 
         // --- LOGIC ---
