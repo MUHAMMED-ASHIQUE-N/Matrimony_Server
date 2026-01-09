@@ -24,12 +24,13 @@ export class ProfileController {
     }
   }
 
-  static async registerFullProfile(req: Request, res: Response, next: NextFunction) {
+ static async registerFullProfile(req: Request, res: Response, next: NextFunction) {
      const userId = (req as any).user.userId;
      const data = req.body;
      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
  
      try {
+       // ... (Keep existing image upload logic) ...
        let photoUrls: string[] = [];
        let userProfileUrl: string | null = null;
  
@@ -43,6 +44,7 @@ export class ProfileController {
        }
        if (data.user_profile) userProfileUrl = data.user_profile;
  
+       // ... (Keep existing parsing logic) ...
        const parseRange = (val: any) => {
           if (!val) return null;
           if (typeof val === 'string') { try { return JSON.parse(val); } catch { return val.split(',').map(Number); } }
@@ -53,11 +55,19 @@ export class ProfileController {
        const hobbies = typeof data.hobbies === 'string' ? [data.hobbies] : data.hobbies;
        const interests = typeof data.interests === 'string' ? [data.interests] : data.interests;
  
+       // Parse Passout Year safely
+       const passoutYear = data.passoutYear ? parseInt(data.passoutYear.toString()) : null;
+
        const query = `
          INSERT INTO profiles (
            user_id, first_name, last_name, contact, gender, profile_created_for,
            date_of_birth, height_cm, weight_kg, caste, marital_status,
            education, present_country, financial_status,
+           
+           -- NEW COLUMNS
+           tagline, religion, mother_tongue, college, passout_year, 
+           occupation, company, annual_income, about_me,
+
            photos, user_profile, hobbies, interests,
            diet_preference, smoking, drinking,
            partner_min_age, partner_max_age,
@@ -65,11 +75,26 @@ export class ProfileController {
            partner_marital_preference, partner_religion_preference,
            updated_at
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, NOW())
+         VALUES (
+           $1, $2, $3, $4, $5, $6, 
+           $7, $8, $9, $10, $11, 
+           $12, $13, $14, 
+           $15, $16, $17, $18, $19, $20, $21, $22, $23,
+           $24, $25, $26, $27, 
+           $28, $29, $30, 
+           $31, $32, $33, $34, $35, $36, 
+           NOW()
+         )
          ON CONFLICT (user_id) DO UPDATE SET 
            first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name, contact = EXCLUDED.contact,
            photos = EXCLUDED.photos, user_profile = EXCLUDED.user_profile, education = EXCLUDED.education,
            present_country = EXCLUDED.present_country, financial_status = EXCLUDED.financial_status,
+           
+           -- UPDATE NEW COLUMNS
+           tagline = EXCLUDED.tagline, religion = EXCLUDED.religion, mother_tongue = EXCLUDED.mother_tongue,
+           college = EXCLUDED.college, passout_year = EXCLUDED.passout_year, occupation = EXCLUDED.occupation,
+           company = EXCLUDED.company, annual_income = EXCLUDED.annual_income, about_me = EXCLUDED.about_me,
+
            partner_min_age = EXCLUDED.partner_min_age, partner_max_age = EXCLUDED.partner_max_age, updated_at = NOW()
          RETURNING *;
        `;
@@ -78,6 +103,11 @@ export class ProfileController {
          userId, data.firstName, data.lastName, data.contact, data.gender, data.profileCreatedFor,
          data.dateOfBirth, parseFloat(data.height), parseFloat(data.weight), data.caste, data.maritalStatus,
          data.education, data.presentCountry, data.financialStatus,
+         
+         // New Values
+         data.tagline, data.religion, data.motherTongue, data.college, passoutYear, 
+         data.occupation, data.company, data.annualIncome, data.aboutMe,
+
          photoUrls, userProfileUrl, hobbies || [], interests || [],
          data.dietPreference, data.smoking, data.drinking,
          pMinAge, pMaxAge, pMinHeight, pMaxHeight,
@@ -137,10 +167,12 @@ export class ProfileController {
       } catch (error) { next(error); }
   }
 
-  static async updateMe(req: Request, res: Response, next: NextFunction) {
+ static async updateMe(req: Request, res: Response, next: NextFunction) {
       const userId = (req as any).user.userId;
       const updates = req.body;
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[] | undefined;
+      
+      // ... (Keep existing file handling and range parsing logic) ...
       if (files && !Array.isArray(files)) {
           if (files['user_profile']?.[0]) updates.user_profile = await StorageService.uploadImage(files['user_profile'][0].buffer);
           if (files['photos'] && files['photos'].length > 0) updates.photos = await StorageService.uploadMultipleImages(files['photos']);
@@ -149,17 +181,47 @@ export class ProfileController {
       if (updates.heightRange) { const r = typeof updates.heightRange === 'string' ? JSON.parse(updates.heightRange) : updates.heightRange; updates.partner_min_height = r[0]; updates.partner_max_height = r[1]; delete updates.heightRange; }
       if (updates.height) updates.height_cm = parseFloat(updates.height);
       if (updates.weight) updates.weight_kg = parseFloat(updates.weight);
+      
       const forbidden = ['user_id', 'profile_id', 'created_at', 'height', 'weight'];
       forbidden.forEach(f => delete updates[f]);
-      const columnMap: Record<string, string> = { firstName: 'first_name', lastName: 'last_name', profileCreatedFor: 'profile_created_for', maritalStatus: 'marital_status', dateOfBirth: 'date_of_birth', presentCountry: 'present_country', financialStatus: 'financial_status', dietPreference: 'diet_preference', maritalStatusPreference: 'partner_marital_preference', religionPreference: 'partner_religion_preference', userProfile: 'user_profile' };
+
+      // MAPPING UPDATE
+      const columnMap: Record<string, string> = { 
+          firstName: 'first_name', lastName: 'last_name', profileCreatedFor: 'profile_created_for', 
+          maritalStatus: 'marital_status', dateOfBirth: 'date_of_birth', presentCountry: 'present_country', 
+          financialStatus: 'financial_status', dietPreference: 'diet_preference', 
+          maritalStatusPreference: 'partner_marital_preference', religionPreference: 'partner_religion_preference', 
+          userProfile: 'user_profile',
+          // New Mappings
+          motherTongue: 'mother_tongue',
+          passoutYear: 'passout_year',
+          annualIncome: 'annual_income',
+          aboutMe: 'about_me'
+          // tagline, religion, college, occupation, company map directly (same name in DB if using snake_case or handled below)
+      };
+
       const setClauses = [];
       const values = [];
       let idx = 1;
-      for (const [key, value] of Object.entries(updates)) { const dbCol = columnMap[key] || key; setClauses.push(`${dbCol} = $${idx}`); values.push(value); idx++; }
+      
+      for (const [key, value] of Object.entries(updates)) { 
+          // If key is not in map, assume key IS the db column (e.g. occupation -> occupation)
+          const dbCol = columnMap[key] || key; 
+          setClauses.push(`${dbCol} = $${idx}`); 
+          values.push(value); 
+          idx++; 
+      }
+
       if (setClauses.length === 0) return res.status(400).json({message: "No fields to update"});
+      
       values.push(userId);
       const sql = `UPDATE profiles SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE user_id = $${idx} RETURNING *;`;
-      try { const result = await db.query(sql, values); if (result.rows.length === 0) return res.status(404).json({message: "Profile not found"}); res.json({ message: 'Profile updated', profile: result.rows[0] }); } catch (error) { next(error); }
+      
+      try { 
+          const result = await db.query(sql, values); 
+          if (result.rows.length === 0) return res.status(404).json({message: "Profile not found"}); 
+          res.json({ message: 'Profile updated', profile: result.rows[0] }); 
+      } catch (error) { next(error); }
   }
 
   static async getMe(req: Request, res: Response, next: NextFunction) {
@@ -177,99 +239,60 @@ export class ProfileController {
    * 1. Get My Profile -> Check Gender & Saved Preferences
    * 2. Apply Filters: Query Params (Search) >> Saved Preferences (Full Profile) >> Defaults (Basic Profile)
    */
-  static async getMatches(req: Request, res: Response, next: NextFunction) {
+static async getMatches(req: Request, res: Response, next: NextFunction) {
      const userId = (req as any).user.userId;
-     
-     // Search & Filter Params
-     const { 
-         search,         // Generic name search
-         location,       // Filter by Country
-         job,            // Filter by Education/Job
-         ageMin, 
-         ageMax 
-     } = req.query;
-
+     const { search, location, job, ageMin, ageMax } = req.query;
      try {
-       // 1. Fetch My Profile (Gender & Preferences)
-       const myProfileRes = await db.query(
-         `SELECT 
-            gender, 
-            partner_min_age, partner_max_age, 
-            partner_min_height, partner_max_height,
-            partner_religion_preference
-          FROM profiles WHERE user_id = $1`, 
-         [userId]
-       );
-
-       if (myProfileRes.rows.length === 0) {
-         return res.status(404).json({ message: 'Please create a basic profile first.' });
-       }
-
+       const myProfileRes = await db.query(`SELECT gender, partner_min_age, partner_max_age, partner_min_height, partner_max_height, partner_religion_preference FROM profiles WHERE user_id = $1`, [userId]);
+       if (myProfileRes.rows.length === 0) return res.status(404).json({ message: 'Please create a basic profile first.' });
        const myData = myProfileRes.rows[0];
-
-       // 2. Determine Target Gender (Opposite)
        const targetGender = myData.gender === 'Male' ? 'Female' : 'Male';
-
-       // 3. Determine Filters (Priority: Query Param > DB Preference > Default)
        const targetMinAge = ageMin || myData.partner_min_age || 18;
        const targetMaxAge = ageMax || myData.partner_max_age || 60;
        
-       // 4. Build Dynamic SQL
+       // UPDATED SELECT QUERY TO INCLUDE NEW FIELDS FOR CARD DISPLAY
        let sql = `
          SELECT 
-             profile_id, user_id, first_name, last_name, gender, user_profile,
-             date_part('year', age(date_of_birth)) as age, 
-             height_cm, education, present_country, marital_status, financial_status
-         FROM profiles
-         WHERE 
-             gender = $1
-             AND user_id != $2
-             AND (date_of_birth IS NULL OR date_part('year', age(date_of_birth)) BETWEEN $3 AND $4)
-       `;
-
+            profile_id, user_id, first_name, last_name, gender, user_profile, 
+            date_part('year', age(date_of_birth)) as age, 
+            height_cm, weight_kg, caste, religion, marital_status,
+            education, occupation, company, annual_income, present_country, 
+            tagline, about_me, hobbies, interests, mother_tongue
+         FROM profiles 
+         WHERE gender = $1 AND user_id != $2 
+         AND (date_of_birth IS NULL OR date_part('year', age(date_of_birth)) BETWEEN $3 AND $4)`;
+         
        const values: any[] = [targetGender, userId, targetMinAge, targetMaxAge];
        let paramIdx = 5;
-
-       // --- Apply Optional Search Filters ---
-
-       // A. Name Search
-       if (search) {
-           sql += ` AND (first_name ILIKE $${paramIdx} OR last_name ILIKE $${paramIdx})`;
-           values.push(`%${search}%`);
-           paramIdx++;
-       }
-
-       // B. Location (Country)
-       if (location) {
-           sql += ` AND present_country ILIKE $${paramIdx}`;
-           values.push(`%${location}%`);
-           paramIdx++;
-       }
-
-       // C. Job (Education)
-       if (job) {
-           sql += ` AND education ILIKE $${paramIdx}`; // Mapping 'job' to 'education' column
-           values.push(`%${job}%`);
-           paramIdx++;
-       }
-
-       // Finish Query
+       if (search) { sql += ` AND (first_name ILIKE $${paramIdx} OR last_name ILIKE $${paramIdx})`; values.push(`%${search}%`); paramIdx++; }
+       if (location) { sql += ` AND present_country ILIKE $${paramIdx}`; values.push(`%${location}%`); paramIdx++; }
+       
+       // Map 'job' filter to 'occupation' column
+       if (job) { sql += ` AND occupation ILIKE $${paramIdx}`; values.push(`%${job}%`); paramIdx++; }
+       
        sql += ` ORDER BY created_at DESC LIMIT 50`;
-
        const matches = await db.query(sql, values);
-
-       res.json({ 
-           criteria: {
-             lookingFor: targetGender,
-             ageRange: [targetMinAge, targetMaxAge],
-             filters: { search, location, job }
-           },
-           count: matches.rows.length, 
-           matches: matches.rows 
-       });
-
-     } catch (error) { 
-       next(error); 
-     }
+       res.json({ criteria: { lookingFor: targetGender, ageRange: [targetMinAge, targetMaxAge], filters: { search, location, job } }, count: matches.rows.length, matches: matches.rows });
+     } catch (error) { next(error); }
    }
+
+ static async getUserProfile(req: Request, res: Response, next: NextFunction) {
+    const targetUserId = req.params.id;
+    try {
+      // UPDATED SELECT QUERY TO INCLUDE NEW FIELDS
+      const query = `
+        SELECT 
+            profile_id, user_id, first_name, last_name, gender, date_of_birth, 
+            height_cm, weight_kg, caste, religion, mother_tongue, marital_status, 
+            education, college, passout_year, occupation, company, annual_income,
+            present_country, financial_status, photos, user_profile, 
+            tagline, about_me, hobbies, interests, diet_preference, smoking, drinking, 
+            partner_min_age, partner_max_age, partner_min_height, partner_max_height, partner_religion_preference 
+        FROM profiles WHERE user_id = $1`;
+        
+      const result = await db.query(query, [targetUserId]);
+      if (result.rows.length === 0) return res.status(404).json({ message: 'Profile not found' });
+      res.json(result.rows[0]);
+    } catch (error) { next(error); }
+  }
 }

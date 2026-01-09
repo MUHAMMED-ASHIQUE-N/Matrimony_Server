@@ -13,12 +13,26 @@ export const fullProfileSchema = z.object({
     profileCreatedFor: profileForEnum,
     gender: genderEnum,
     
+
+    // NEW FIELDS
+    tagline: z.string().optional(),
+    religion: z.string().optional(),
+    motherTongue: z.string().optional(),
+
+    // Education & Career
+    college: z.string().optional(),
+    passoutYear: z.union([z.string(), z.number()]).optional(), // Accepts "2020" or 2020
+    occupation: z.string().optional(),
+    company: z.string().optional(),
+    annualIncome: z.string().optional(),
+    
     // Personal
     dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), { message: "Invalid Date" }),
     height: z.string(), // Frontend sends "175", stored as numeric
     weight: z.string(),
     caste: z.string().optional(),
     maritalStatus: z.string(),
+    aboutMe: z.string().max(1000).optional(),
     
     // Socio-Economic
     education: z.string(),
