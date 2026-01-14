@@ -26,9 +26,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.tailwindcss.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
     },
   },
   crossOriginEmbedderPolicy: false, // Allow embedding
@@ -57,7 +59,7 @@ app.get("/", (req: Request, res: Response) => {
     success: true,
     message: "Welcome to the Matrimony API",
     version: "2.0.0",
-    docs: "/api/docs"
+    docs: "apidoc.html"
   });
 });
 
@@ -73,7 +75,7 @@ app.get("/health", async (req: Request, res: Response) => {
 
 
 app.get("/apidoc.html", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "apidoc.html"));
+  res.sendFile(path.join(__dirname, "..", "apidoc.html"));
 })
 
 // API Routes (DDD Modules)
