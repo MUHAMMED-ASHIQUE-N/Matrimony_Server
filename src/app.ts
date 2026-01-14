@@ -1,44 +1,90 @@
-import express, { Application, Request, Response, NextFunction } from "express";
+import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import authRoutes from './routes/auth.routes';
-import profileRoutes from './routes/profile.routes';
+
+// New DDD module routes
+import { authRoutes } from './modules/auth';
+import { profileRoutes } from './modules/profile';
+
+// Shared middleware
+import {
+  errorHandler,
+  notFoundHandler,
+  requestSanitizer,
+  CacheManager
+} from './shared';
+import path from "path";
+
 // Initialize the app
 const app: Application = express();
 
 // --- Global Middlewares ---
 
 // 1. Security Headers (OWASP recommendation)
-app.use(helmet());
+// Enhanced Helmet configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding
+}));
 
 // 2. CORS (Allow requests from your Frontend/Mobile App)
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // 3. Body Parsers
-app.use(express.json()); // Parse JSON bodies (as sent by API clients)
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 4. Request Sanitization (XSS/Injection prevention)
+app.use(requestSanitizer);
 
 // --- Routes ---
-app.get("/", (req: Request, res: Response) => {
-  res.send("<h1>Welcome to the Matrimony API </h1>");
-})
-// Health Check (Used by Load Balancers/AWS/Render)
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({ status: "UP", timestamp: new Date() });
-});
 
-// Import your routes here later
-// app.use('/api/v1/auth', authRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-// --- Global Error Handler ---
-// This prevents the server from leaking stack traces to the user
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Internal Server Error",
+// Root endpoint
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: "Welcome to the Matrimony API",
+    version: "2.0.0",
+    docs: "/api/docs"
   });
 });
+
+// Health Check (Used by Load Balancers/AWS/Render)
+app.get("/health", async (req: Request, res: Response) => {
+  const cacheHealthy = await CacheManager.isHealthy();
+  res.status(200).json({
+    status: "UP",
+    timestamp: new Date(),
+    cache: cacheHealthy ? "connected" : "unavailable"
+  });
+});
+
+
+app.get("/apidoc.html", (req: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "apidoc.html"));
+})
+
+// API Routes (DDD Modules)
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+
+// --- 404 Handler ---
+app.use(notFoundHandler);
+
+// --- Global Error Handler ---
+// Centralized error handling with consistent response format
+app.use(errorHandler);
 
 export default app;

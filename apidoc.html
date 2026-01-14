@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrimony API Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Method colors */
+        .method-get {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .method-post {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .method-patch {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .method-delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* Collapsible */
+        .endpoint-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .endpoint-body.open {
+            max-height: 2000px;
+        }
+
+        /* Syntax highlighting */
+        .json-key {
+            color: #0891b2;
+        }
+
+        .json-string {
+            color: #059669;
+        }
+
+        .json-number {
+            color: #7c3aed;
+        }
+
+        .json-boolean {
+            color: #dc2626;
+        }
+
+        .json-null {
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
+                        💍</div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Matrimony API</h1>
+                        <p class="text-xs text-gray-500">v2.0 • REST API Documentation</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium mono">Base URL:
+                        /api</span>
+                    <span class="px-3 py-1.5 bg-amber-50 text-amber-700 rounded-lg text-xs font-medium">🔒 Bearer Token
+                        Auth</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Quick Start Guide -->
+        <section class="bg-gradient-to-r from-pink-50 to-rose-50 border border-pink-200 rounded-2xl p-6 mb-8">
+            <h2 class="text-lg font-bold text-gray-900 mb-3">🚀 Quick Start - User Flow</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl p-4 border border-pink-100 shadow-sm">
+                    <div class="text-2xl mb-2">1️⃣</div>
+                    <h3 class="font-semibold text-gray-900 text-sm">Sign Up</h3>
+                    <p class="text-xs text-gray-500 mt-1">Register with email/phone → Get OTP</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-pink-100 shadow-sm">
+                    <div class="text-2xl mb-2">2️⃣</div>
+                    <h3 class="font-semibold text-gray-900 text-sm">Create Basic Profile</h3>
+                    <p class="text-xs text-gray-500 mt-1">Set name, gender → See matches by opposite gender</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-pink-100 shadow-sm">
+                    <div class="text-2xl mb-2">3️⃣</div>
+                    <h3 class="font-semibold text-gray-900 text-sm">Complete Profile</h3>
+                    <p class="text-xs text-gray-500 mt-1">Add preferences → Get personalized matches</p>
+                </div>
+                <div class="bg-white rounded-xl p-4 border border-pink-100 shadow-sm">
+                    <div class="text-2xl mb-2">4️⃣</div>
+                    <h3 class="font-semibold text-gray-900 text-sm">Browse & Connect</h3>
+                    <p class="text-xs text-gray-500 mt-1">Search, filter, view profiles</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Categories -->
+        <div id="api-container" class="space-y-8"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 bg-white mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-gray-500">
+            Matrimony API Documentation • Generated from backend routes
+        </div>
+    </footer>
+
+    <script>
+        // API Documentation Data
+        const apiDocs = {
+            "🔐 Authentication": {
+                description: "User registration, verification, and login endpoints. All users start here.",
+                baseUrl: "/api/auth",
+                endpoints: [
+                    {
+                        method: "POST",
+                        path: "/signup",
+                        title: "Register User",
+                        description: "Create a new user account. Sends OTP to email/phone for verification. Password is hashed before storage.",
+                        authRequired: false,
+                        requestBody: {
+                            identifier: { type: "string", required: true, example: "user@example.com", description: "Email or phone number" },
+                            type: { type: "string", required: true, example: "EMAIL", description: "Either 'EMAIL' or 'PHONE'" },
+                            password: { type: "string", required: true, example: "SecurePass123", description: "Min 6 characters" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Registration successful. OTP sent.",
+                            data: { userId: "uuid-1234", isNew: true }
+                        },
+                        errorResponses: [
+                            { code: 400, message: "User already exists and is verified" },
+                            { code: 400, message: "Invalid email/phone format" }
+                        ],
+                        notes: "If user exists but is unverified, a new OTP is sent instead of error."
+                    },
+                    {
+                        method: "POST",
+                        path: "/verify",
+                        title: "Verify OTP",
+                        description: "Verify the OTP sent during registration. Returns JWT token on success. User is now logged in.",
+                        authRequired: false,
+                        requestBody: {
+                            identifier: { type: "string", required: true, example: "user@example.com", description: "Email or phone used during signup" },
+                            type: { type: "string", required: true, example: "EMAIL", description: "Either 'EMAIL' or 'PHONE'" },
+                            otp: { type: "string", required: true, example: "123456", description: "6-digit OTP code" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Verified successfully. Logged in.",
+                            data: { token: "eyJhbGciOiJIUzI1NiIs...", userId: "uuid-1234" }
+                        },
+                        errorResponses: [
+                            { code: 400, message: "Invalid OTP" },
+                            { code: 400, message: "OTP expired" }
+                        ],
+                        notes: "Store the token securely. Use it in Authorization header for protected routes."
+                    },
+                    {
+                        method: "POST",
+                        path: "/login",
+                        title: "Login",
+                        description: "Authenticate existing verified user with email/phone and password. Only verified (active) users can login. Unverified users receive a special error code with their userId to enable OTP resend.",
+                        authRequired: false,
+                        requestBody: {
+                            identifier: { type: "string", required: true, example: "user@example.com", description: "Email or phone" },
+                            type: { type: "string", required: true, example: "EMAIL", description: "Either 'EMAIL' or 'PHONE'" },
+                            password: { type: "string", required: true, example: "SecurePass123", description: "User password" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Login successful",
+                            data: { token: "eyJhbGciOiJIUzI1NiIs...", userId: "uuid-1234" }
+                        },
+                        errorResponses: [
+                            { code: 401, message: "Invalid credentials" },
+                            { code: 403, message: "ACCOUNT_NOT_VERIFIED - User exists but hasn't verified OTP yet. Response includes userId and canResendOtp:true" }
+                        ],
+                        notes: "If you receive ACCOUNT_NOT_VERIFIED error, the response includes: { userId, canResendOtp: true, hint: 'Call POST /api/auth/resend-otp' }. Use this to show a 'Resend OTP' button."
+                    },
+                    {
+                        method: "POST",
+                        path: "/resend-otp",
+                        title: "Resend OTP",
+                        description: "Resend verification OTP to an unverified user's email or phone. Use this when: (1) User's OTP expired, (2) User didn't receive OTP, (3) Login returns ACCOUNT_NOT_VERIFIED error. Generates a new 6-digit OTP valid for 10 minutes.",
+                        authRequired: false,
+                        requestBody: {
+                            identifier: { type: "string", required: true, example: "user@example.com", description: "Email or phone number that was used during signup" },
+                            type: { type: "string", required: true, example: "EMAIL", description: "Either 'EMAIL' or 'PHONE' - must match signup type" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "OTP resent to email.",
+                            data: { userId: "uuid-1234" }
+                        },
+                        errorResponses: [
+                            { code: 404, message: "User not found. Please sign up first." },
+                            { code: 409, message: "Account already verified. Please login." }
+                        ],
+                        notes: "After resending OTP, user should call /verify endpoint with the new OTP. Rate limited to 10 requests per minute."
+                    },
+                    {
+                        method: "POST",
+                        path: "/refresh",
+                        title: "Refresh Token",
+                        description: "Get a new access token using refresh token. Old refresh token is invalidated (rotation).",
+                        authRequired: false,
+                        requestBody: {
+                            refreshToken: { type: "string", required: true, example: "eyJhbGciOiJIUz...", description: "Refresh token from login/signup" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Token refreshed successfully",
+                            data: { accessToken: "eyJ...", refreshToken: "eyJ...", expiresIn: 900 }
+                        },
+                        errorResponses: [
+                            { code: 401, message: "Invalid or expired refresh token" }
+                        ],
+                        notes: "Access token expires in 15 minutes. Refresh token is valid for 7 days."
+                    },
+                    {
+                        method: "POST",
+                        path: "/logout",
+                        title: "Logout",
+                        description: "Revoke refresh token. User must login again to get new tokens.",
+                        authRequired: false,
+                        requestBody: {
+                            refreshToken: { type: "string", required: true, example: "eyJhbGciOiJIUz...", description: "Refresh token to revoke" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Logged out successfully",
+                            data: { success: true }
+                        },
+                        errorResponses: [],
+                        notes: "Always succeeds, even if token is already invalid."
+                    }
+                ]
+            },
+            "👤 Profile Management": {
+                description: "Create and manage user profiles. Basic profile is required for matchmaking.",
+                baseUrl: "/api/profile",
+                endpoints: [
+                    {
+                        method: "POST",
+                        path: "/basic",
+                        title: "Create Basic Profile",
+                        description: "First step after registration. Creates minimal profile with gender (required for matching). Call this immediately after OTP verification.",
+                        authRequired: true,
+                        requestBody: {
+                            firstName: { type: "string", required: true, example: "John", description: "User's first name" },
+                            lastName: { type: "string", required: false, example: "Doe", description: "User's last name" },
+                            gender: { type: "string", required: true, example: "Male", description: "'Male', 'Female', or 'Other'" },
+                            profileCreatedFor: { type: "string", required: true, example: "Self", description: "'Self', 'Son', 'Daughter', etc." }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Basic profile created",
+                            data: { profileId: "p-uuid", firstName: "John", gender: "Male" }
+                        },
+                        errorResponses: [],
+                        notes: "Gender determines the target matches. Male users see Female profiles and vice versa."
+                    },
+                    {
+                        method: "POST",
+                        path: "/register",
+                        title: "Register Full Profile",
+                        description: "Complete profile registration with all details and partner preferences. These preferences are used for smart matching.",
+                        authRequired: true,
+                        requestBody: {
+                            firstName: { type: "string", required: true, example: "John", description: "First name" },
+                            lastName: { type: "string", required: false, example: "Doe", description: "Last name" },
+                            gender: { type: "string", required: true, example: "Male", description: "'Male'/'Female'/'Other'" },
+                            profileCreatedFor: { type: "string", required: true, example: "Self", description: "Who is this profile for" },
+                            dateOfBirth: { type: "string", required: false, example: "1995-05-20", description: "YYYY-MM-DD format" },
+                            height: { type: "number", required: false, example: 175, description: "Height in cm" },
+                            weight: { type: "number", required: false, example: 70, description: "Weight in kg" },
+                            religion: { type: "string", required: false, example: "Hindu", description: "Religion" },
+                            caste: { type: "string", required: false, example: "Brahmin", description: "Caste/Community" },
+                            maritalStatus: { type: "string", required: false, example: "Never Married", description: "Current marital status" },
+                            education: { type: "string", required: false, example: "B.Tech", description: "Education level" },
+                            occupation: { type: "string", required: false, example: "Software Engineer", description: "Current occupation" },
+                            presentCountry: { type: "string", required: false, example: "India", description: "Current country" },
+                            tagline: { type: "string", required: false, example: "Looking for life partner", description: "Short bio headline" },
+                            aboutMe: { type: "string", required: false, example: "I am a...", description: "Detailed bio" },
+                            partnerMinAge: { type: "number", required: false, example: 22, description: "Minimum partner age" },
+                            partnerMaxAge: { type: "number", required: false, example: 30, description: "Maximum partner age" },
+                            partnerReligionPreference: { type: "string", required: false, example: "Hindu", description: "Preferred partner religion" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Profile registered successfully",
+                            data: { profileId: "p-uuid", firstName: "John", partnerMinAge: 22, partnerMaxAge: 30 }
+                        },
+                        errorResponses: [],
+                        notes: "All fields except firstName, gender, profileCreatedFor are optional. Upserts if profile exists."
+                    },
+                    {
+                        method: "GET",
+                        path: "/me",
+                        title: "Get My Profile",
+                        description: "Fetch the complete profile of the currently logged-in user. Includes all personal details and preferences.",
+                        authRequired: true,
+                        requestBody: null,
+                        successResponse: {
+                            success: true,
+                            message: "Profile retrieved",
+                            data: {
+                                profileId: "p-uuid",
+                                firstName: "John",
+                                lastName: "Doe",
+                                gender: "Male",
+                                age: 28,
+                                occupation: "Software Engineer",
+                                photos: ["url1", "url2"],
+                                partnerMinAge: 22,
+                                partnerMaxAge: 30
+                            }
+                        },
+                        errorResponses: [
+                            { code: 404, message: "Profile not found" }
+                        ],
+                        notes: "Uses cache for faster response. Cache invalidated on profile update."
+                    },
+                    {
+                        method: "PATCH",
+                        path: "/me",
+                        title: "Update Profile",
+                        description: "Partially update profile fields. Only send fields you want to change.",
+                        authRequired: true,
+                        requestBody: {
+                            height: { type: "number", required: false, example: 180, description: "New height in cm" },
+                            aboutMe: { type: "string", required: false, example: "Updated bio...", description: "New bio text" },
+                            partnerMinAge: { type: "number", required: false, example: 24, description: "New min age preference" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Profile updated",
+                            data: { profileId: "p-uuid", height: 180, aboutMe: "Updated bio..." }
+                        },
+                        errorResponses: [
+                            { code: 404, message: "Profile not found" }
+                        ],
+                        notes: "Send only the fields you want to update. Omitted fields remain unchanged."
+                    },
+                    {
+                        method: "GET",
+                        path: "/:userId",
+                        title: "Get User Profile",
+                        description: "View public profile of another user. Used when viewing a match's details.",
+                        authRequired: true,
+                        queryParams: null,
+                        requestBody: null,
+                        successResponse: {
+                            success: true,
+                            message: "Profile retrieved",
+                            data: {
+                                profileId: "p-uuid",
+                                firstName: "Jane",
+                                age: 26,
+                                occupation: "Doctor",
+                                photos: ["url1"],
+                                tagline: "Looking for..."
+                            }
+                        },
+                        errorResponses: [
+                            { code: 404, message: "Profile not found" }
+                        ],
+                        notes: "Returns public-safe fields only. Contact info is hidden."
+                    }
+                ]
+            },
+            "💕 Matchmaking": {
+                description: "Find and browse potential matches. Uses cursor-based pagination for efficient loading.",
+                baseUrl: "/api/profile",
+                endpoints: [
+                    {
+                        method: "GET",
+                        path: "/matches",
+                        title: "Get Matches",
+                        description: "Fetch matching profiles based on your gender and preferences. Returns opposite gender profiles. Supports cursor pagination and filters.",
+                        authRequired: true,
+                        queryParams: {
+                            cursor: { type: "string", required: false, example: "eyJzIjoiMjAy...", description: "Pagination cursor from previous response" },
+                            limit: { type: "number", required: false, example: 20, description: "Results per page (max 50)" },
+                            search: { type: "string", required: false, example: "John", description: "Search by name" },
+                            location: { type: "string", required: false, example: "India", description: "Filter by country" },
+                            job: { type: "string", required: false, example: "Doctor", description: "Filter by occupation" },
+                            religion: { type: "string", required: false, example: "Hindu", description: "Filter by religion" },
+                            maritalStatus: { type: "string", required: false, example: "Never Married", description: "Filter by marital status" },
+                            minAge: { type: "number", required: false, example: 25, description: "Override minimum age" },
+                            maxAge: { type: "number", required: false, example: 35, description: "Override maximum age" }
+                        },
+                        requestBody: null,
+                        successResponse: {
+                            success: true,
+                            message: "Matches retrieved",
+                            data: [
+                                { profileId: "p-1", firstName: "Jane", age: 26, occupation: "Doctor", presentCountry: "India", userProfile: "url..." },
+                                { profileId: "p-2", firstName: "Sarah", age: 24, occupation: "Engineer", presentCountry: "UAE", userProfile: "url..." }
+                            ],
+                            meta: { nextCursor: "eyJzIjoiMjAy...", hasMore: true }
+                        },
+                        errorResponses: [
+                            { code: 404, message: "Profile not found (create profile first)" }
+                        ],
+                        notes: "Age defaults: Uses your profile's partnerMinAge/partnerMaxAge, or 18-60 if not set. Query params override profile preferences."
+                    }
+                ]
+            },
+            "📸 Media Management": {
+                description: "Upload and manage profile photos and profile picture.",
+                baseUrl: "/api/profile",
+                endpoints: [
+                    {
+                        method: "POST",
+                        path: "/media",
+                        title: "Upload Media",
+                        description: "Upload profile picture and/or gallery photos. Accepts image URLs (after uploading to your storage).",
+                        authRequired: true,
+                        requestBody: {
+                            userProfile: { type: "string", required: false, example: "https://storage.com/pic.jpg", description: "Main profile picture URL" },
+                            photos: { type: "array", required: false, example: ["url1", "url2"], description: "Gallery photo URLs (array)" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Media updated",
+                            data: { userProfile: "https://...", photos: ["url1", "url2"] }
+                        },
+                        errorResponses: [],
+                        notes: "Photos array replaces existing photos. To append, include existing URLs."
+                    },
+                    {
+                        method: "DELETE",
+                        path: "/media",
+                        title: "Delete Media",
+                        description: "Remove profile picture or a specific gallery photo.",
+                        authRequired: true,
+                        requestBody: {
+                            type: { type: "string", required: true, example: "photos", description: "'user_profile' or 'photos'" },
+                            photoUrl: { type: "string", required: false, example: "https://...", description: "URL of photo to remove (required for type='photos')" }
+                        },
+                        successResponse: {
+                            success: true,
+                            message: "Media deleted",
+                            data: { success: true }
+                        },
+                        errorResponses: [
+                            { code: 400, message: "Invalid delete media request" }
+                        ],
+                        notes: "For 'user_profile', sets it to null. For 'photos', removes specific URL from array."
+                    }
+                ]
+            }
+        };
+
+        // Render Functions
+        function renderApiDocs() {
+            const container = document.getElementById('api-container');
+            container.innerHTML = '';
+
+            for (const [category, data] of Object.entries(apiDocs)) {
+                const categoryHtml = `
+                    <section class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-bold text-gray-900">${category}</h2>
+                            <p class="text-sm text-gray-500 mt-1">${data.description}</p>
+                            <span class="inline-block mt-2 px-2 py-1 bg-white border border-gray-200 rounded text-xs mono text-gray-600">${data.baseUrl}</span>
+                        </div>
+                        <div class="divide-y divide-gray-100">
+                            ${data.endpoints.map(ep => renderEndpoint(ep, data.baseUrl)).join('')}
+                        </div>
+                    </section>
+                `;
+                container.insertAdjacentHTML('beforeend', categoryHtml);
+            }
+
+            // Add click handlers
+            document.querySelectorAll('.endpoint-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const body = header.nextElementSibling;
+                    const arrow = header.querySelector('.arrow');
+                    body.classList.toggle('open');
+                    arrow.classList.toggle('rotate-90');
+                });
+            });
+        }
+
+        function renderEndpoint(ep, baseUrl) {
+            const methodClass = `method-${ep.method.toLowerCase()}`;
+            const fullPath = baseUrl + ep.path;
+
+            return `
+                <div class="endpoint">
+                    <div class="endpoint-header cursor-pointer px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <span class="px-3 py-1.5 rounded-lg text-xs font-bold mono ${methodClass}">${ep.method}</span>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">${ep.title}</h3>
+                                <p class="text-sm text-gray-500 mono">${fullPath}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${ep.authRequired ? '<span class="px-2 py-1 bg-amber-50 text-amber-700 rounded text-xs font-medium">🔒 Auth Required</span>' : '<span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-medium">Public</span>'}
+                            <svg class="arrow w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="endpoint-body bg-gray-50 border-t border-gray-100">
+                        <div class="px-6 py-5 space-y-6">
+                            <!-- Description -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                                <p class="text-sm text-gray-600">${ep.description}</p>
+                                ${ep.notes ? `<p class="text-xs text-blue-600 mt-2 bg-blue-50 px-3 py-2 rounded-lg">💡 ${ep.notes}</p>` : ''}
+                            </div>
+                            
+                            ${ep.queryParams ? renderQueryParams(ep.queryParams) : ''}
+                            ${ep.requestBody ? renderRequestBody(ep.requestBody) : ''}
+                            
+                            <!-- Response -->
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">✅ Success Response (200)</h4>
+                                <pre class="bg-gray-900 text-green-300 p-4 rounded-xl text-xs mono overflow-x-auto">${syntaxHighlight(JSON.stringify(ep.successResponse, null, 2))}</pre>
+                            </div>
+                            
+                            ${ep.errorResponses.length > 0 ? `
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-700 mb-2">❌ Error Responses</h4>
+                                <div class="space-y-2">
+                                    ${ep.errorResponses.map(err => `
+                                        <div class="flex items-center gap-3 text-sm">
+                                            <span class="px-2 py-1 bg-red-100 text-red-700 rounded mono text-xs font-bold">${err.code}</span>
+                                            <span class="text-gray-600">${err.message}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQueryParams(params) {
+            return `
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Query Parameters</h4>
+                    <div class="overflow-hidden border border-gray-200 rounded-xl">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Parameter</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Type</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Required</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Example</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                ${Object.entries(params).map(([key, val]) => `
+                                    <tr>
+                                        <td class="px-4 py-2 mono text-sm text-pink-600 font-medium">${key}</td>
+                                        <td class="px-4 py-2 mono text-xs text-gray-500">${val.type}</td>
+                                        <td class="px-4 py-2">${val.required ? '<span class="text-red-500 text-xs">Yes</span>' : '<span class="text-gray-400 text-xs">No</span>'}</td>
+                                        <td class="px-4 py-2 mono text-xs text-gray-600">${val.example}</td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">${val.description}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRequestBody(body) {
+            return `
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-700 mb-2">Request Body (JSON)</h4>
+                    <div class="overflow-hidden border border-gray-200 rounded-xl">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Field</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Type</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Required</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Example</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-100">
+                                ${Object.entries(body).map(([key, val]) => `
+                                    <tr>
+                                        <td class="px-4 py-2 mono text-sm text-cyan-600 font-medium">${key}</td>
+                                        <td class="px-4 py-2 mono text-xs text-gray-500">${val.type}</td>
+                                        <td class="px-4 py-2">${val.required ? '<span class="text-red-500 text-xs font-medium">Required</span>' : '<span class="text-gray-400 text-xs">Optional</span>'}</td>
+                                        <td class="px-4 py-2 mono text-xs text-gray-600">${Array.isArray(val.example) ? JSON.stringify(val.example) : val.example}</td>
+                                        <td class="px-4 py-2 text-xs text-gray-500">${val.description}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+
+        function syntaxHighlight(json) {
+            return json
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, match => {
+                    if (/:$/.test(match)) {
+                        return `<span class="json-key">${match}</span>`;
+                    }
+                    return `<span class="json-string">${match}</span>`;
+                })
+                .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+                .replace(/\bnull\b/g, '<span class="json-null">null</span>')
+                .replace(/\b(-?\d+\.?\d*)\b/g, '<span class="json-number">$1</span>');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', renderApiDocs);
+    </script>
+</body>
+
+</html>

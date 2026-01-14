@@ -47,3 +47,11 @@ export const setPasswordSchema = z.object({
     path: ["confirmPassword"],
   }),
 });
+
+// 5. Resend OTP Schema (Identifier + Type)
+export const resendOtpSchema = z.object({
+  body: z.object({
+    identifier: z.string().min(3, "Identifier is required"),
+    type: typeEnum,
+  }),
+});

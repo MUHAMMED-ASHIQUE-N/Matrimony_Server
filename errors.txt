@@ -1,0 +1,28 @@
+﻿src/modules/auth/application/interfaces.ts(1,24): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/auth/infrastructure/AuthRepository.postgres.ts(1,16): error TS2307: Cannot find module '../../../../config/db' or its corresponding type declarations.
+src/modules/auth/infrastructure/AuthRepository.postgres.ts(2,39): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/auth/infrastructure/AuthRepository.postgres.ts(3,22): error TS2307: Cannot find module '../../domain/entities/User.entity' or its corresponding type declarations.
+src/modules/auth/infrastructure/AuthRepository.postgres.ts(4,33): error TS2307: Cannot find module '../../application/interfaces' or its corresponding type declarations.
+src/modules/auth/presentation/auth.controller.ts(7,8): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/auth/presentation/auth.controller.ts(8,29): error TS2307: Cannot find module '../../application/services/AuthService' or its corresponding type declarations.
+src/modules/auth/presentation/auth.controller.ts(9,40): error TS2307: Cannot find module '../../infrastructure/AuthRepository.postgres' or its corresponding type declarations.
+src/modules/auth/presentation/auth.routes.ts(3,26): error TS2307: Cannot find module '../../../../middlewares/validate.middleware' or its corresponding type declarations.
+src/modules/auth/presentation/auth.routes.ts(8,8): error TS2307: Cannot find module '../../../../validations/auth.validation' or its corresponding type declarations.
+src/modules/auth/presentation/auth.routes.ts(9,30): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/profile/application/interfaces.ts(1,47): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/profile/application/services/ProfileService.ts(142,40): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/modules/profile/infrastructure/ProfileRepository.postgres.ts(1,16): error TS2307: Cannot find module '../../../../config/db' or its corresponding type declarations.
+src/modules/profile/infrastructure/ProfileRepository.postgres.ts(8,8): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/profile/infrastructure/ProfileRepository.postgres.ts(9,25): error TS2307: Cannot find module '../../domain/entities/Profile.entity' or its corresponding type declarations.
+src/modules/profile/infrastructure/ProfileRepository.postgres.ts(15,8): error TS2307: Cannot find module '../../application/interfaces' or its corresponding type declarations.
+src/modules/profile/presentation/profile.controller.ts(8,8): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/modules/profile/presentation/profile.controller.ts(9,32): error TS2307: Cannot find module '../../application/services/ProfileService' or its corresponding type declarations.
+src/modules/profile/presentation/profile.controller.ts(10,43): error TS2307: Cannot find module '../../infrastructure/ProfileRepository.postgres' or its corresponding type declarations.
+src/modules/profile/presentation/profile.controller.ts(11,38): error TS2307: Cannot find module '../../../../core/types' or its corresponding type declarations.
+src/modules/profile/presentation/profile.routes.ts(12,25): error TS2307: Cannot find module '../../../../middlewares/auth.middleware' or its corresponding type declarations.
+src/modules/profile/presentation/profile.routes.ts(13,26): error TS2307: Cannot find module '../../../../middlewares/validate.middleware' or its corresponding type declarations.
+src/modules/profile/presentation/profile.routes.ts(18,8): error TS2307: Cannot find module '../../../../validations/profile.validation' or its corresponding type declarations.
+src/modules/profile/presentation/profile.routes.ts(19,30): error TS2307: Cannot find module '../../../../shared' or its corresponding type declarations.
+src/shared/middleware/errorHandler.middleware.ts(46,26): error TS2352: Conversion of type 'Error' to type '{ errors: { path: (string | number)[]; message: string; }[]; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'errors' is missing in type 'Error' but required in type '{ errors: { path: (string | number)[]; message: string; }[]; }'.
+src/shared/utils/ResponseFormatter.ts(82,13): error TS2698: Spread types may only be created from object types.
