@@ -9,6 +9,8 @@ import {
 import { ProfileService } from '../application/services/ProfileService';
 import { ProfileRepositoryPostgres } from '../infrastructure/ProfileRepository.postgres';
 import { AuthenticatedRequest } from '../../../core/types';
+import { uploadToCloudinary, uploadMultipleToCloudinary } from '../../../services/cloudinary.service';
+
 
 /**
  * Profile Controller
@@ -338,4 +340,68 @@ export const deleteMedia = asyncHandler(async (req: Request, res: Response) => {
         'Media deleted',
         { success: true }
     );
+});
+
+/**
+ * POST /api/profile/upload
+ * Upload image files to Cloudinary
+ * 
+ * @description Accepts multipart/form-data with image files.
+ * Uploads to Cloudinary and returns the URLs.
+ * Use this BEFORE /api/profile/register to get image URLs.
+ * 
+ * Request: multipart/form-data
+ * - profileImage: Single file (optional) - Main profile picture
+ * - photos: Multiple files (optional) - Gallery photos (max 5)
+ * 
+ * Response: { userProfile: string | null, photos: string[] }
+ */
+export const uploadImageFiles = asyncHandler(async (req: Request, res: Response) => {
+    // Multer adds files to req.files or req.file
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    const singleFile = req.file as Express.Multer.File | undefined;
+
+    let userProfileUrl: string | null = null;
+    const photoUrls: string[] = [];
+
+    try {
+        // Handle single profile image (if using upload.single('profileImage'))
+        if (singleFile) {
+            const result = await uploadToCloudinary(singleFile.buffer, 'matrimony/profiles');
+            userProfileUrl = result.url;
+        }
+
+        // Handle multiple fields (if using upload.fields())
+        if (files) {
+            // Profile image
+            if (files.profileImage && files.profileImage.length > 0) {
+                const result = await uploadToCloudinary(files.profileImage[0].buffer, 'matrimony/profiles');
+                userProfileUrl = result.url;
+            }
+
+            // Gallery photos
+            if (files.photos && files.photos.length > 0) {
+                const urls = await uploadMultipleToCloudinary(files.photos, 'matrimony/gallery');
+                photoUrls.push(...urls);
+            }
+        }
+
+        return sendSuccess(
+            res,
+            HttpStatus.OK,
+            'Images uploaded successfully',
+            {
+                userProfile: userProfileUrl,
+                photos: photoUrls
+            }
+        );
+    } catch (error) {
+        console.error('[uploadImageFiles] Error:', error);
+        return sendError(
+            res,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            'IMAGE_UPLOAD_FAILED',
+            error instanceof Error ? error.message : 'Failed to upload images'
+        );
+    }
 });

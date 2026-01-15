@@ -7,7 +7,8 @@ import {
     getMatches,
     getUserProfile,
     uploadMedia,
-    deleteMedia
+    deleteMedia,
+    uploadImageFiles
 } from './profile.controller';
 import { protect } from '../../../middlewares/auth.middleware';
 import { validate } from '../../../middlewares/validate.middleware';
@@ -17,6 +18,7 @@ import {
     updateProfileSchema
 } from '../../../validations/profile.validation';
 import { RateLimiters } from '../../../shared';
+import { upload } from '../../../middlewares/upload.middleware';
 
 /**
  * Profile Routes
@@ -80,8 +82,25 @@ router.patch(
 router.get('/matches', protect, getMatches);
 
 /**
+ * @route   POST /api/profile/upload
+ * @desc    Upload image files to Cloudinary (multipart/form-data)
+ * @access  Private
+ * @fields  profileImage (single), photos (max 5)
+ * @returns { userProfile: string | null, photos: string[] }
+ */
+router.post(
+    '/upload',
+    protect,
+    upload.fields([
+        { name: 'profileImage', maxCount: 1 },
+        { name: 'photos', maxCount: 5 }
+    ]),
+    uploadImageFiles
+);
+
+/**
  * @route   POST /api/profile/media
- * @desc    Upload photos/profile picture
+ * @desc    Update profile with image URLs (use after /upload)
  * @access  Private
  */
 router.post('/media', protect, uploadMedia);
